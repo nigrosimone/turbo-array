@@ -57,6 +57,20 @@ test('filter: obj', (t) => {
   t.deepEqual(lfn(data), data.filter(m));
 });
 
+test('find: obj', (t) => {
+  type Obj = { id: number };
+  const m = (item: Obj) => item.id % 2 === 0;
+  const f = (item: Obj) => item.id === 2;
+  const data: Array<Obj> = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }];
+  const lfn = turbo<Obj>()
+    .filter(m)
+    .find(f)
+    .build();
+
+  t.deepEqual(lfn(data), { id: 2 });
+  t.deepEqual(lfn(data), data.filter(m).find(f));
+});
+
 test('join: number', (t) => {
   const data: Array<number> = [1, 2, 3];
   const lfn = turbo<number>().join(';').build();

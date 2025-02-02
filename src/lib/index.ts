@@ -2,8 +2,10 @@ type Operation<T = any, U = any> =
   | {
     type: 'filter';
     fn: (value: T, index: number) => unknown;
-  }
-  | {
+  } | {
+    type: 'find';
+    fn: (value: T, index: number, obj: T[]) => unknown;
+  } | {
     type: 'map';
     fn: (value: T, index: number) => U;
   }
@@ -55,6 +57,23 @@ class Turbo<T = any> {
       this.#operations.push({ type: 'filter', fn: predicate });
     }
     return this;
+  }
+
+  /**
+   * Adds a find operation to the list of operations to be performed on the array.
+   * The find operation returns the first element in the array that satisfies the provided predicate function.
+   *
+   * @param predicate - A function that accepts up to three arguments. The find method calls the predicate function one time for each element in the array.
+   * @param predicate.value - The current element being processed in the array.
+   * @param predicate.index - The index of the current element being processed in the array.
+   * @returns An object with a `build` method that returns a function when called.
+   */
+  find(predicate: (value: T, index: number) => unknown): LastOperation<T | undefined, T | undefined> {
+    if (!this.#fn) {
+      this.#operations.push({ type: 'find', fn: predicate });
+      this.#hasReduce = true;
+    }
+    return this.#lastOperation as unknown as LastOperation<T | undefined, T | undefined>;
   }
 
   /**
@@ -149,6 +168,8 @@ class Turbo<T = any> {
           head += `r = ${JSON.stringify(operation.initialValue)};`;
         } else if (operation.type === 'join') {
           head += 'r = "";';
+        } else if (operation.type === 'find') {
+          head += 'r = undefined;';
         }
 
         if (operation.type === 'filter') {
@@ -161,6 +182,8 @@ class Turbo<T = any> {
           body += `${operation.type}_${i}(a, i);`;
         } else if (operation.type === 'join') {
           body += `r += a + (i < last ? ${JSON.stringify(operation.separator)} : '');`;
+        } else if (operation.type === 'find') {
+          body += `if (${operation.type}_${i}(a, i)) return a;`;
         }
       }
 
