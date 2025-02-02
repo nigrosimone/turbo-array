@@ -1,6 +1,8 @@
 # Turbo Array
 
-Turbo Array is a lightweight, high-performance library that allows you to build lazy evaluation pipelines for arrays. It supports operations like `filter`, `map`, `reduce`, `forEach`, and `join`, executing them efficiently only when needed.
+Turbo Array is a lightweight, high-performance library that allows you to build lazy evaluation pipelines for arrays. It supports operations like `filter`, `map`, `reduce`, `forEach`, and `join`, executing them efficiently.
+
+A method build with Turbo Array is 4x faster than vanilla version.
 
 See live example with benchmark: https://stackblitz.com/edit/turbo-array
 
@@ -13,7 +15,7 @@ npm install turbo-array
 ## Usage
 
 ```typescript
-import turbo from 'turbo-array';
+import { turbo } from 'turbo-array';
 
 const numbers = [1, 2, 3, 4, 5];
 
@@ -59,6 +61,8 @@ Compiles the operations into a function that can be executed on an array.
 ## Example
 
 ```typescript
+import { turbo } from 'turbo-array';
+
 const words = ['hello', 'world'];
 
 const sentence = turbo()
