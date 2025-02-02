@@ -63,3 +63,7 @@ Joins elements into a string using the provided separator.
 ### `.build(): (array: T[], context?: Record<string, any>) => T[] | U`
 
 Compiles the operations into a function that can be executed on an array.
+
+## Support
+
+This is an open-source project. Star this [repository](https://github.com/nigrosimone/turbo-array), if you like it, or even [donate](https://www.paypal.com/paypalme/snwp). Thank you so much!
