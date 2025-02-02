@@ -91,7 +91,7 @@ class Turbo<T = any> {
    * @param separator - The string to use as a separator. Defaults to an empty string.
    * @returns An object with a `build` method that returns a function when called.
    */
-  join(separator = ''): LastOperation<T, string> {
+  join(separator = ','): LastOperation<T, string> {
     if (!this.#fn) {
       this.#operations.push({ type: 'join', separator });
       this.#hasReduce = true;

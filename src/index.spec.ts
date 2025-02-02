@@ -64,11 +64,18 @@ test('join: number', (t) => {
   t.is(lfn(data), data.join(';'));
 });
 
-test('join: string', (t) => {
+test('join: string ;', (t) => {
   const data: Array<string> = ['1', '2', '3'];
   const lfn = turbo<string>().join(';').build();
 
   t.is(lfn(data), data.join(';'));
+});
+
+test('join: string', (t) => {
+  const data: Array<string> = ['1', '2', '3'];
+  const lfn = turbo<string>().join().build();
+
+  t.is(lfn(data), data.join());
 });
 
 test('map: number', (t) => {
