@@ -2,7 +2,7 @@
 
 Turbo Array is a lightweight, high-performance library that allows you to build lazy evaluation pipelines for arrays. It supports operations like `filter`, `map`, `reduce`, `forEach`, and `join`, executing them efficiently only when needed.
 
-See live example: https://stackblitz.com/edit/turbo-array
+See live example with benchmark: https://stackblitz.com/edit/turbo-array
 
 ## Installation
 
