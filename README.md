@@ -34,6 +34,23 @@ complexSum([1, 2, 3, 4, 5]);
 complexSum([6, 7, 8, 9, 10]);
 ```
 
+If you need to pass a variable context to turbo method
+
+```typescript
+import { turbo } from 'turbo-array';
+
+// Build one time a "turbo" method
+const complexSum = turbo()
+  .filter((n) => n % 2 === 0)
+  .map((n) => n * context.multiply)
+  .reduce((acc, n) => acc + n, 0)
+  .build();
+
+// Reuse multiple times
+complexSum([1, 2, 3, 4, 5], { multiply: 2 });
+complexSum([1, 2, 3, 4, 5], { multiply: 3 });
+```
+
 ## Support
 
 This is an open-source project. Star this [repository](https://github.com/nigrosimone/turbo-array), if you like it, or even [donate](https://www.paypal.com/paypalme/snwp). Thank you so much!
