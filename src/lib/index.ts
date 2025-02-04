@@ -6,6 +6,9 @@ type Operation<T = any, U = any> =
     type: 'find';
     fn: (value: T, index: number, obj: T[]) => unknown;
   } | {
+    type: 'some';
+    fn: (value: T, index: number) => boolean;
+  } | {
     type: 'map';
     fn: (value: T, index: number) => U;
   }
@@ -57,6 +60,22 @@ class Turbo<T = any> {
       this.#operations.push({ type: 'filter', fn: predicate });
     }
     return this;
+  }
+
+  /**
+   * Adds a 'some' operation to the Turbo instance. The 'some' operation checks if at least one element in the array
+   * satisfies the provided predicate function.
+   *
+   * @param predicate - A function that accepts up to two arguments. The 'some' method calls the predicate function 
+   * for each element in the array until the predicate returns a truthy value, or until the end of the array.
+   * @returns The current Turbo instance with the 'some' operation added to the operations queue.
+   */
+  some(predicate: (value: T, index: number) => boolean): LastOperation<T, boolean> {
+    if (!this.#fn) {
+      this.#operations.push({ type: 'some', fn: predicate });
+      this.#hasReduce = true;
+    }
+    return this.#lastOperation as unknown as LastOperation<T, boolean>;
   }
 
   /**
@@ -170,6 +189,8 @@ class Turbo<T = any> {
           head += 'r = "";';
         } else if (operation.type === 'find') {
           head += 'r = undefined;';
+        } else if (operation.type === 'some') {
+          head += 'r = false;';
         }
 
         if (operation.type === 'filter') {
@@ -184,6 +205,8 @@ class Turbo<T = any> {
           body += `r += a + (i < last ? ${JSON.stringify(operation.separator)} : '');`;
         } else if (operation.type === 'find') {
           body += `if (${operation.type}_${i}(a, i)) return a;`;
+        } else if (operation.type === 'some') {
+          body += `if (${operation.type}_${i}(a, i)) return true;`;
         }
       }
 
