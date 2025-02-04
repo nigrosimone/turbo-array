@@ -9,6 +9,9 @@ type Operation<T = any, U = any> =
     type: 'some';
     fn: (value: T, index: number) => boolean;
   } | {
+    type: 'every';
+    fn: (value: T, index: number) => boolean;
+  } | {
     type: 'map';
     fn: (value: T, index: number) => U;
   }
@@ -73,6 +76,22 @@ class Turbo<T = any> {
   some(predicate: (value: T, index: number) => boolean): LastOperation<T, boolean> {
     if (!this.#fn) {
       this.#operations.push({ type: 'some', fn: predicate });
+      this.#hasReduce = true;
+    }
+    return this.#lastOperation as unknown as LastOperation<T, boolean>;
+  }
+
+  /**
+   * Checks if every element in the array satisfies the provided predicate function.
+   * 
+   * @param predicate - A function that accepts up to two arguments. The `every` method calls 
+   * the predicate function for each element in the array until the predicate returns true, 
+   * or until the end of the array.
+   * @returns A `LastOperation` object containing the result of the `every` operation.
+   */
+  every(predicate: (value: T, index: number) => boolean): LastOperation<T, boolean> {
+    if (!this.#fn) {
+      this.#operations.push({ type: 'every', fn: predicate });
       this.#hasReduce = true;
     }
     return this.#lastOperation as unknown as LastOperation<T, boolean>;
@@ -191,6 +210,8 @@ class Turbo<T = any> {
           head += 'r = undefined;';
         } else if (operation.type === 'some') {
           head += 'r = false;';
+        } else if (operation.type === 'every') {
+          head += 'r = true;';
         }
 
         if (operation.type === 'filter') {
@@ -207,6 +228,8 @@ class Turbo<T = any> {
           body += `if (${operation.type}_${i}(a, i)) return a;`;
         } else if (operation.type === 'some') {
           body += `if (${operation.type}_${i}(a, i)) return true;`;
+        } else if (operation.type === 'every') {
+          body += `if (!${operation.type}_${i}(a, i)) return false;`;
         }
       }
 

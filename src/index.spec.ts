@@ -72,17 +72,33 @@ test('find: obj', (t) => {
 });
 
 test('some: obj', (t) => {
+  const context = { t: 2 };
   type Obj = { id: number };
   const m = (item: Obj) => item.id % 2 === 0;
-  const s = (item: Obj) => item.id === 2;
+  const s = (item: Obj) => item.id === context.t;
   const data: Array<Obj> = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }];
   const lfn = turbo<Obj>()
     .filter(m)
     .some(s)
     .build();
 
-  t.deepEqual(lfn(data), true);
-  t.deepEqual(lfn(data), data.filter(m).some(s));
+  t.deepEqual(lfn(data, { t: 3 }), false);
+  t.deepEqual(lfn(data, context), true);
+  t.deepEqual(lfn(data, context), data.filter(m).some(s));
+});
+
+test('every: obj', (t) => {
+  type Obj = { id: number };
+  const a = (item: Obj) => item.id % 2 === 0;
+
+  const data: Array<Obj> = [{ id: 2 }, { id: 4 }, { id: 6 }];
+  const lfn = turbo<Obj>()
+    .every(a)
+    .build();
+
+  t.deepEqual(lfn([{ id: 2 }, { id: 4 }, { id: 6 }]), true);
+  t.deepEqual(lfn([{ id: 2 }, { id: 4 }, { id: 5 }]), false);
+  t.deepEqual(lfn(data), data.every(a));
 });
 
 test('join: number', (t) => {
