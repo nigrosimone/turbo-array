@@ -210,7 +210,8 @@ class Turbo<T = any> {
         head += 'let r;';
       }
 
-      body += 'for (let i = 0, e = l.length, last = e - 1, idx = 0; i < e; i++, idx++) {';
+      body += 'let i = 0, e = l.length, last = e - 1, idx = 0;';
+      body += 'for (; i < e; i++, idx++) {';
       body += 'let a = l[i];';
 
       for (let i = 0, e = this.#operations.length; i < e; i++) {
