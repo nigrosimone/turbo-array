@@ -181,7 +181,7 @@ class Turbo<T = any> {
       return this.#fn;
     }
 
-    let head = '';
+    let head = 'if (!Array.isArray(l)) throw new Error("Invalid parameters");';
     let body = '';
     let foot = '';
 

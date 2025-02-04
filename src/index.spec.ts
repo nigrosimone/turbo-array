@@ -99,6 +99,7 @@ test('every: obj', (t) => {
   t.deepEqual(lfn([{ id: 2 }, { id: 4 }, { id: 6 }]), true);
   t.deepEqual(lfn([{ id: 2 }, { id: 4 }, { id: 5 }]), false);
   t.deepEqual(lfn(data), data.every(a));
+  t.deepEqual(lfn([]), [].every(a));
 });
 
 test('join: number', (t) => {
@@ -198,7 +199,7 @@ test('build: undefined', (t) => {
   const lfn = turbo<number>().build();
 
   t.deepEqual(lfn([1, 2, 3, 4]), [1, 2, 3, 4]);
-  t.is(lfn(undefined as any), undefined as any);
+  t.throws(() => lfn(undefined as any));
 });
 
 
