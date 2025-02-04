@@ -6,6 +6,9 @@ type Operation<T = any, U = any> =
     type: 'find';
     fn: (value: T, index: number, obj: T[]) => unknown;
   } | {
+    type: 'findIndex';
+    fn: (value: T, index: number, obj: T[]) => unknown;
+  } | {
     type: 'some';
     fn: (value: T, index: number) => boolean;
   } | {
@@ -115,6 +118,21 @@ class Turbo<T = any> {
   }
 
   /**
+   * Finds the index of the first element in the array that satisfies the provided testing function.
+   * If no elements satisfy the testing function, -1 is returned.
+   *
+   * @param predicate - A function that accepts up to two arguments. The findIndex method calls the predicate function once for each element in the array, in ascending order, until it finds one where predicate returns true. If such an element is found, findIndex immediately returns that element's index. Otherwise, findIndex returns -1.
+   * @returns A `LastOperation` object containing the index of the first element in the array that passes the test. If no elements pass the test, the index will be -1.
+   */
+  findIndex(predicate: (value: T, index: number) => unknown): LastOperation<T | undefined, number> {
+    if (!this.#fn) {
+      this.#operations.push({ type: 'findIndex', fn: predicate });
+      this.#hasReduce = true;
+    }
+    return this.#lastOperation as unknown as LastOperation<T | undefined, number>;
+  }
+
+  /**
    * Applies a mapping function to each element in the array and returns a new Turbo instance.
    *
    * @param mapper - A function that takes a value and its index, and returns a new value.
@@ -192,7 +210,7 @@ class Turbo<T = any> {
         head += 'let r;';
       }
 
-      body += 'for (let i = 0, e = l.length, last = e - 1; i < e; i++) {';
+      body += 'for (let i = 0, e = l.length, last = e - 1, idx = 0; i < e; i++, idx++) {';
       body += 'let a = l[i];';
 
       for (let i = 0, e = this.#operations.length; i < e; i++) {
@@ -208,6 +226,8 @@ class Turbo<T = any> {
           head += 'r = "";';
         } else if (operation.type === 'find') {
           head += 'r = undefined;';
+        } else if (operation.type === 'findIndex') {
+          head += 'r = -1;';
         } else if (operation.type === 'some') {
           head += 'r = false;';
         } else if (operation.type === 'every') {
@@ -215,21 +235,26 @@ class Turbo<T = any> {
         }
 
         if (operation.type === 'filter') {
-          body += `if (!${operation.type}_${i}(a, i)) continue;`;
+          body += `if (!${operation.type}_${i}(a, idx)) {`;
+          body += `idx--;`;
+          body += `continue;`;
+          body += `}`;
         } else if (operation.type === 'map') {
-          body += `a = ${operation.type}_${i}(a, i);`;
+          body += `a = ${operation.type}_${i}(a, idx);`;
         } else if (operation.type === 'reduce') {
-          body += `r = ${operation.type}_${i}(r, a, i);`;
+          body += `r = ${operation.type}_${i}(r, a, idx);`;
         } else if (operation.type === 'forEach') {
-          body += `${operation.type}_${i}(a, i);`;
+          body += `${operation.type}_${i}(a, idx);`;
         } else if (operation.type === 'join') {
           body += `r += a + (i < last ? ${JSON.stringify(operation.separator)} : '');`;
         } else if (operation.type === 'find') {
-          body += `if (${operation.type}_${i}(a, i)) return a;`;
+          body += `if (${operation.type}_${i}(a, idx)) return a;`;
+        } else if (operation.type === 'findIndex') {
+          body += `if (${operation.type}_${i}(a, idx)) return idx;`;
         } else if (operation.type === 'some') {
-          body += `if (${operation.type}_${i}(a, i)) return true;`;
+          body += `if (${operation.type}_${i}(a, idx)) return true;`;
         } else if (operation.type === 'every') {
-          body += `if (!${operation.type}_${i}(a, i)) return false;`;
+          body += `if (!${operation.type}_${i}(a, idx)) return false;`;
         }
       }
 
