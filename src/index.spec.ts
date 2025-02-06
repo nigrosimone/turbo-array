@@ -5,22 +5,17 @@ import { turbo } from './';
 test('filter: cache', (t) => {
   const m = (item: number) => item % 2 === 0;
   const data: Array<number> = [1, 2, 3];
-  const lfn = turbo<number>('cache')
-    .filter(m)
-    .build();
+  const lfn = turbo<number>('cache').filter(m).build();
 
   for (let i = 0; i < 3; i++) {
     t.deepEqual(lfn(data), data.filter(m));
   }
 });
 
-
 test('filter: number', (t) => {
   const m = (item: number) => item % 2 === 0;
   const data: Array<number> = [1, 2, 3];
-  const lfn = turbo<number>()
-    .filter(m)
-    .build();
+  const lfn = turbo<number>().filter(m).build();
 
   t.deepEqual(lfn(data), data.filter(m));
 });
@@ -29,9 +24,7 @@ test('filter: context', (t) => {
   const context = { rnd: Math.random() };
   const m = (item: number) => item >= context.rnd;
   const data: Array<number> = [Math.random(), Math.random(), Math.random()];
-  const lfn = turbo<number>()
-    .filter(m)
-    .build();
+  const lfn = turbo<number>().filter(m).build();
 
   t.deepEqual(lfn(data, context), data.filter(m));
 });
@@ -39,9 +32,7 @@ test('filter: context', (t) => {
 test('filter: string', (t) => {
   const m = (item: string) => item.startsWith('b');
   const data: Array<string> = ['foo', 'bar', 'baz'];
-  const lfn = turbo<string>()
-    .filter(m)
-    .build();
+  const lfn = turbo<string>().filter(m).build();
 
   t.deepEqual(lfn(data), data.filter(m));
 });
@@ -50,9 +41,7 @@ test('filter: obj', (t) => {
   type Obj = { id: number };
   const m = (item: Obj) => item.id % 2 === 0;
   const data: Array<Obj> = [{ id: 1 }, { id: 2 }, { id: 3 }];
-  const lfn = turbo<Obj>()
-    .filter(m)
-    .build();
+  const lfn = turbo<Obj>().filter(m).build();
 
   t.deepEqual(lfn(data), data.filter(m));
 });
@@ -62,10 +51,7 @@ test('find: obj', (t) => {
   const m = (item: Obj) => item.id % 2 === 0;
   const f = (item: Obj) => item.id === 2;
   const data: Array<Obj> = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }];
-  const lfn = turbo<Obj>()
-    .filter(m)
-    .find(f)
-    .build();
+  const lfn = turbo<Obj>().filter(m).find(f).build();
 
   t.deepEqual(lfn(data), { id: 2 });
   t.deepEqual(lfn(data), data.filter(m).find(f));
@@ -76,10 +62,7 @@ test('findIndex: obj', (t) => {
   const m = (item: Obj) => item.id % 2 === 0;
   const f = (item: Obj) => item.id === 2;
   const data: Array<Obj> = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }];
-  const lfn = turbo<Obj>()
-    .filter(m)
-    .findIndex(f)
-    .build();
+  const lfn = turbo<Obj>().filter(m).findIndex(f).build();
 
   t.deepEqual(lfn(data), 0);
   t.deepEqual(lfn(data), data.filter(m).findIndex(f));
@@ -91,10 +74,7 @@ test('some: obj', (t) => {
   const m = (item: Obj) => item.id % 2 === 0;
   const s = (item: Obj) => item.id === context.t;
   const data: Array<Obj> = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }];
-  const lfn = turbo<Obj>()
-    .filter(m)
-    .some(s)
-    .build();
+  const lfn = turbo<Obj>().filter(m).some(s).build();
 
   t.deepEqual(lfn(data, { t: 3 }), false);
   t.deepEqual(lfn(data, context), true);
@@ -106,9 +86,7 @@ test('every: obj', (t) => {
   const a = (item: Obj) => item.id % 2 === 0;
 
   const data: Array<Obj> = [{ id: 2 }, { id: 4 }, { id: 6 }];
-  const lfn = turbo<Obj>()
-    .every(a)
-    .build();
+  const lfn = turbo<Obj>().every(a).build();
 
   t.deepEqual(lfn([{ id: 2 }, { id: 4 }, { id: 6 }]), true);
   t.deepEqual(lfn([{ id: 2 }, { id: 4 }, { id: 5 }]), false);
@@ -140,9 +118,7 @@ test('join: string', (t) => {
 test('map: number', (t) => {
   const m = (item: number): number => item + 1;
   const data: Array<number> = [1, 2, 3];
-  const lfn = turbo<number>()
-    .map(m)
-    .build();
+  const lfn = turbo<number>().map(m).build();
 
   t.deepEqual(lfn(data), data.map(m));
 });
@@ -151,9 +127,7 @@ test('map: obj', (t) => {
   type Obj = { id: number };
   const m = (item: Obj): Obj => ({ id: item.id + 1 });
   const data: Array<Obj> = [{ id: 1 }, { id: 2 }, { id: 3 }];
-  const lfn = turbo<Obj>()
-    .map(m)
-    .build();
+  const lfn = turbo<Obj>().map(m).build();
 
   t.deepEqual(lfn(data), data.map(m));
 });
@@ -161,9 +135,7 @@ test('map: obj', (t) => {
 test('reduce: number', (t) => {
   const m = (acc: number, item: number): number => acc + item;
   const data: Array<number> = [1, 2, 3];
-  const lfn = turbo<number>()
-    .reduce<number>(m, 0)
-    .build();
+  const lfn = turbo<number>().reduce<number>(m, 0).build();
 
   t.is(lfn(data), data.reduce(m, 0));
 });
@@ -171,9 +143,7 @@ test('reduce: number', (t) => {
 test('reduce: string', (t) => {
   const m = (acc: string, item: number): string => acc + item;
   const data: Array<number> = [1, 2, 3];
-  const lfn = turbo<number>()
-    .reduce(m, '')
-    .build();
+  const lfn = turbo<number>().reduce(m, '').build();
 
   t.is(lfn(data), data.reduce(m, ''));
 });
@@ -181,9 +151,7 @@ test('reduce: string', (t) => {
 test('reduce: array', (t) => {
   const m = (acc: number[], item: number): number[] => [...acc, item * 2];
   const data: Array<number> = [1, 2, 3];
-  const lfn = turbo<number>()
-    .reduce<Array<number>>(m, [])
-    .build();
+  const lfn = turbo<number>().reduce<Array<number>>(m, []).build();
 
   t.deepEqual(lfn(data), data.reduce(m, []));
 });
@@ -192,9 +160,7 @@ test('reduce: obj', (t) => {
   type Obj = { id: number };
   const m = (acc: string, item: Obj): string => item.id + acc;
   const data: Array<Obj> = [{ id: 1 }, { id: 2 }, { id: 3 }];
-  const lfn = turbo<Obj>()
-    .reduce<string>(m, '')
-    .build();
+  const lfn = turbo<Obj>().reduce<string>(m, '').build();
 
   t.deepEqual(lfn(data), data.reduce(m, ''));
 });
@@ -215,7 +181,6 @@ test('build: undefined', (t) => {
   t.deepEqual(lfn([1, 2, 3, 4]), [1, 2, 3, 4]);
   t.throws(() => lfn(undefined as any));
 });
-
 
 test('build: same ref', (t) => {
   const l = turbo<number>();

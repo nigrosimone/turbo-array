@@ -1,40 +1,45 @@
 type Operation<T = any, U = any> =
   | {
-    type: 'filter';
-    fn: (value: T, index: number) => unknown;
-  } | {
-    type: 'find';
-    fn: (value: T, index: number, obj: T[]) => unknown;
-  } | {
-    type: 'findIndex';
-    fn: (value: T, index: number, obj: T[]) => unknown;
-  } | {
-    type: 'some';
-    fn: (value: T, index: number) => boolean;
-  } | {
-    type: 'every';
-    fn: (value: T, index: number) => boolean;
-  } | {
-    type: 'map';
-    fn: (value: T, index: number) => U;
-  }
+      type: 'filter';
+      fn: (value: T, index: number) => unknown;
+    }
   | {
-    type: 'reduce';
-    fn: (previousValue: U, currentValue: T, currentIndex: number) => U;
-    initialValue: U;
-  }
+      type: 'find';
+      fn: (value: T, index: number, obj: T[]) => unknown;
+    }
   | {
-    type: 'forEach';
-    fn: (value: T, index: number) => void;
-  }
+      type: 'findIndex';
+      fn: (value: T, index: number, obj: T[]) => unknown;
+    }
   | {
-    type: 'join';
-    separator: string;
-  };
+      type: 'some';
+      fn: (value: T, index: number) => boolean;
+    }
+  | {
+      type: 'every';
+      fn: (value: T, index: number) => boolean;
+    }
+  | {
+      type: 'map';
+      fn: (value: T, index: number) => U;
+    }
+  | {
+      type: 'reduce';
+      fn: (previousValue: U, currentValue: T, currentIndex: number) => U;
+      initialValue: U;
+    }
+  | {
+      type: 'forEach';
+      fn: (value: T, index: number) => void;
+    }
+  | {
+      type: 'join';
+      separator: string;
+    };
 
-type LastOperation<T = any, U = T> = { build: () => ((array: T[], context?: Record<string, any>) => U) };
+type LastOperation<T = any, U = T> = { build: () => (array: T[], context?: Record<string, any>) => U };
 
-type ToArray<T = any> = ((array: T[], context?: Record<string, any>) => T[]);
+type ToArray<T = any> = (array: T[], context?: Record<string, any>) => T[];
 
 const cache = new Map<string, Turbo<any>>();
 
@@ -72,7 +77,7 @@ class Turbo<T = any> {
    * Adds a 'some' operation to the Turbo instance. The 'some' operation checks if at least one element in the array
    * satisfies the provided predicate function.
    *
-   * @param predicate - A function that accepts up to two arguments. The 'some' method calls the predicate function 
+   * @param predicate - A function that accepts up to two arguments. The 'some' method calls the predicate function
    * for each element in the array until the predicate returns a truthy value, or until the end of the array.
    * @returns The current Turbo instance with the 'some' operation added to the operations queue.
    */
@@ -86,9 +91,9 @@ class Turbo<T = any> {
 
   /**
    * Checks if every element in the array satisfies the provided predicate function.
-   * 
-   * @param predicate - A function that accepts up to two arguments. The `every` method calls 
-   * the predicate function for each element in the array until the predicate returns true, 
+   *
+   * @param predicate - A function that accepts up to two arguments. The `every` method calls
+   * the predicate function for each element in the array until the predicate returns true,
    * or until the end of the array.
    * @returns A `LastOperation` object containing the result of the `every` operation.
    */
@@ -278,7 +283,7 @@ class Turbo<T = any> {
 /**
  * Creates and returns a new instance of the Turbo class.
  * @param cacheKey - A key to store the instance in the cache.
- * 
+ *
  * @returns {Turbo<T>} A new instance of the Turbo class.
  */
 export function turbo<T = any>(cacheKey?: string): Turbo<T> {
