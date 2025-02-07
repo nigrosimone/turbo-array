@@ -262,7 +262,7 @@ class Turbo<T = any> {
         } else if (operation.type === 'forEach') {
           body += `${operation.type}_${i}(a, idx);`;
         } else if (operation.type === 'join') {
-          body += `r += a + (i < last ? ${JSON.stringify(operation.separator)} : '');`;
+          body += `r += a + (idx < last ? ${JSON.stringify(operation.separator)} : '');`;
         } else if (operation.type === 'find') {
           body += `if (${operation.type}_${i}(a, idx)) return a;`;
         } else if (operation.type === 'findIndex') {
