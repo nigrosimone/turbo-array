@@ -1,41 +1,41 @@
 type Operation<T = any, U = any> =
   | {
-      type: 'filter';
-      fn: (value: T, index: number) => unknown;
-    }
+    type: 'filter';
+    fn: (value: T, index: number) => unknown;
+  }
   | {
-      type: 'find';
-      fn: (value: T, index: number, obj: T[]) => unknown;
-    }
+    type: 'find';
+    fn: (value: T, index: number, obj: T[]) => unknown;
+  }
   | {
-      type: 'findIndex';
-      fn: (value: T, index: number, obj: T[]) => unknown;
-    }
+    type: 'findIndex';
+    fn: (value: T, index: number, obj: T[]) => unknown;
+  }
   | {
-      type: 'some';
-      fn: (value: T, index: number) => boolean;
-    }
+    type: 'some';
+    fn: (value: T, index: number) => boolean;
+  }
   | {
-      type: 'every';
-      fn: (value: T, index: number) => boolean;
-    }
+    type: 'every';
+    fn: (value: T, index: number) => boolean;
+  }
   | {
-      type: 'map';
-      fn: (value: T, index: number) => U;
-    }
+    type: 'map';
+    fn: (value: T, index: number) => U;
+  }
   | {
-      type: 'reduce';
-      fn: (previousValue: U, currentValue: T, currentIndex: number) => U;
-      initialValue: U;
-    }
+    type: 'reduce';
+    fn: (previousValue: U, currentValue: T, currentIndex: number) => U;
+    initialValue: U;
+  }
   | {
-      type: 'forEach';
-      fn: (value: T, index: number) => void;
-    }
+    type: 'forEach';
+    fn: (value: T, index: number) => void;
+  }
   | {
-      type: 'join';
-      separator: string;
-    };
+    type: 'join';
+    separator: string;
+  };
 
 type LastOperation<T = any, U = T> = { build: () => (array: T[], context?: Record<string, any>) => U };
 
@@ -50,10 +50,11 @@ const cache = new Map<string, Turbo<any>>();
  * accumulated operations on an array.
  */
 class Turbo<T = any> {
-  #operations: Array<Operation<T>> = [];
-  #hasReduce = false;
-  #fn: ToArray<T> | undefined;
-  #lastOperation = {
+  private _operations: Array<Operation<T>> = [];
+  private _hasReduce = false;
+  private _hasFilter = false;
+  private _fn: ToArray<T> | undefined;
+  private _lastOperation = {
     build: this.build.bind(this),
   };
 
@@ -67,8 +68,9 @@ class Turbo<T = any> {
    * @returns The current instance of the Turbo class to allow for method chaining.
    */
   filter(predicate: (value: T, index: number) => unknown): Turbo<T> {
-    if (!this.#fn) {
-      this.#operations.push({ type: 'filter', fn: predicate });
+    if (!this._fn) {
+      this._operations.push({ type: 'filter', fn: predicate });
+      this._hasFilter = true;
     }
     return this;
   }
@@ -82,11 +84,11 @@ class Turbo<T = any> {
    * @returns The current Turbo instance with the 'some' operation added to the operations queue.
    */
   some(predicate: (value: T, index: number) => boolean): LastOperation<T, boolean> {
-    if (!this.#fn) {
-      this.#operations.push({ type: 'some', fn: predicate });
-      this.#hasReduce = true;
+    if (!this._fn) {
+      this._operations.push({ type: 'some', fn: predicate });
+      this._hasReduce = true;
     }
-    return this.#lastOperation as unknown as LastOperation<T, boolean>;
+    return this._lastOperation as unknown as LastOperation<T, boolean>;
   }
 
   /**
@@ -98,11 +100,11 @@ class Turbo<T = any> {
    * @returns A `LastOperation` object containing the result of the `every` operation.
    */
   every(predicate: (value: T, index: number) => boolean): LastOperation<T, boolean> {
-    if (!this.#fn) {
-      this.#operations.push({ type: 'every', fn: predicate });
-      this.#hasReduce = true;
+    if (!this._fn) {
+      this._operations.push({ type: 'every', fn: predicate });
+      this._hasReduce = true;
     }
-    return this.#lastOperation as unknown as LastOperation<T, boolean>;
+    return this._lastOperation as unknown as LastOperation<T, boolean>;
   }
 
   /**
@@ -115,11 +117,11 @@ class Turbo<T = any> {
    * @returns An object with a `build` method that returns a function when called.
    */
   find(predicate: (value: T, index: number) => unknown): LastOperation<T | undefined, T | undefined> {
-    if (!this.#fn) {
-      this.#operations.push({ type: 'find', fn: predicate });
-      this.#hasReduce = true;
+    if (!this._fn) {
+      this._operations.push({ type: 'find', fn: predicate });
+      this._hasReduce = true;
     }
-    return this.#lastOperation as unknown as LastOperation<T | undefined, T | undefined>;
+    return this._lastOperation as unknown as LastOperation<T | undefined, T | undefined>;
   }
 
   /**
@@ -130,11 +132,11 @@ class Turbo<T = any> {
    * @returns A `LastOperation` object containing the index of the first element in the array that passes the test. If no elements pass the test, the index will be -1.
    */
   findIndex(predicate: (value: T, index: number) => unknown): LastOperation<T | undefined, number> {
-    if (!this.#fn) {
-      this.#operations.push({ type: 'findIndex', fn: predicate });
-      this.#hasReduce = true;
+    if (!this._fn) {
+      this._operations.push({ type: 'findIndex', fn: predicate });
+      this._hasReduce = true;
     }
-    return this.#lastOperation as unknown as LastOperation<T | undefined, number>;
+    return this._lastOperation as unknown as LastOperation<T | undefined, number>;
   }
 
   /**
@@ -144,8 +146,8 @@ class Turbo<T = any> {
    * @returns A new Turbo instance with the mapping operation added to the operations queue.
    */
   map<U = T>(mapper: (value: T, index: number) => U): Turbo<U> {
-    if (!this.#fn) {
-      this.#operations.push({ type: 'map', fn: mapper });
+    if (!this._fn) {
+      this._operations.push({ type: 'map', fn: mapper });
     }
     return this as unknown as Turbo<U>;
   }
@@ -158,11 +160,11 @@ class Turbo<T = any> {
    * @returns An object with a `build` method that, when called, returns a function to execute the operations.
    */
   reduce<U>(reducer: (previousValue: U, currentValue: T, currentIndex: number) => U, initialValue: U): LastOperation<T, U> {
-    if (!this.#fn) {
-      this.#operations.push({ type: 'reduce', fn: reducer, initialValue });
-      this.#hasReduce = true;
+    if (!this._fn) {
+      this._operations.push({ type: 'reduce', fn: reducer, initialValue });
+      this._hasReduce = true;
     }
-    return this.#lastOperation as unknown as LastOperation<T, U>;
+    return this._lastOperation as unknown as LastOperation<T, U>;
   }
 
   /**
@@ -172,11 +174,11 @@ class Turbo<T = any> {
    * @returns An object with a `build` method that returns a function when called.
    */
   join(separator = ','): LastOperation<T, string> {
-    if (!this.#fn) {
-      this.#operations.push({ type: 'join', separator });
-      this.#hasReduce = true;
+    if (!this._fn) {
+      this._operations.push({ type: 'join', separator });
+      this._hasReduce = true;
     }
-    return this.#lastOperation as unknown as LastOperation<T, string>;
+    return this._lastOperation as unknown as LastOperation<T, string>;
   }
 
   /**
@@ -186,8 +188,8 @@ class Turbo<T = any> {
    * @returns The current instance of Turbo to allow for method chaining.
    */
   forEach(callbackfn: (value: T, index: number) => void): Turbo<T> {
-    if (!this.#fn) {
-      this.#operations.push({ type: 'forEach', fn: callbackfn });
+    if (!this._fn) {
+      this._operations.push({ type: 'forEach', fn: callbackfn });
     }
     return this;
   }
@@ -200,17 +202,21 @@ class Turbo<T = any> {
    * @returns {ToArray<T>} The generated function that processes an array.
    */
   build(): ToArray<T> {
-    if (this.#fn) {
-      return this.#fn;
+    if (this._fn) {
+      return this._fn;
     }
 
     let head = 'if (!Array.isArray(l)) throw new Error("Invalid parameters");';
     let body = '';
     let foot = '';
 
-    if (this.#operations.length > 0) {
-      if (!this.#hasReduce) {
-        head += 'const r = [];';
+    if (this._operations.length > 0) {
+      if (!this._hasReduce) {
+        if (this._hasFilter) {
+          head += 'const r = [];';
+        } else {
+          head += 'const r = new Array(l.length);';
+        }
       } else {
         head += 'let r;';
       }
@@ -219,8 +225,8 @@ class Turbo<T = any> {
       body += 'for (; i < e; i++, idx++) {';
       body += 'let a = l[i];';
 
-      for (let i = 0, e = this.#operations.length; i < e; i++) {
-        const operation = this.#operations[i];
+      for (let i = 0, e = this._operations.length; i < e; i++) {
+        const operation = this._operations[i];
         const fn = (operation as any)?.fn;
         if (typeof fn === 'function') {
           head += `const ${operation.type}_${i} = ${fn.toString()};`;
@@ -242,9 +248,9 @@ class Turbo<T = any> {
 
         if (operation.type === 'filter') {
           body += `if (!${operation.type}_${i}(a, idx)) {`;
-          body += `idx--;`;
-          body += `continue;`;
-          body += `}`;
+          body += 'idx--;';
+          body += 'continue;';
+          body += '}';
         } else if (operation.type === 'map') {
           body += `a = ${operation.type}_${i}(a, idx);`;
         } else if (operation.type === 'reduce') {
@@ -264,8 +270,12 @@ class Turbo<T = any> {
         }
       }
 
-      if (!this.#hasReduce) {
-        body += 'r.push(a);';
+      if (!this._hasReduce) {
+        if (this._hasFilter) {
+          body += 'r.push(a);';
+        } else {
+          body += 'r[i] = a;';
+        }
       }
 
       foot += '}'; // end for
@@ -274,9 +284,9 @@ class Turbo<T = any> {
       foot += 'return l;';
     }
 
-    this.#fn = new Function('l', 'context', head + body + foot) as ToArray<T>;
-    this.#operations = [];
-    return this.#fn;
+    this._fn = new Function('l', 'context', head + body + foot) as ToArray<T>;
+    this._operations = [];
+    return this._fn;
   }
 }
 
