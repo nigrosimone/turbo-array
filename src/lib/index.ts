@@ -221,9 +221,13 @@ class Turbo<T = any> {
         head += 'let r;';
       }
 
-      body += 'let i = 0, e = l.length, last = e - 1, idx = 0;';
-      body += 'for (; i < e; i++, idx++) {';
-      body += 'let a = l[i];';
+      body += 'let i = 0, e = l.length, last = e - 1, idx = 0, a;';
+      if (this._hasFilter) {
+        body += 'for (; i < e; i++, idx++) {';
+      } else {
+        body += 'for (; i < e; i++, idx = i) {';
+      }
+      body += 'a = l[i];';
 
       for (let i = 0, e = this._operations.length; i < e; i++) {
         const operation = this._operations[i];
