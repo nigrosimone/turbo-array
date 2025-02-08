@@ -188,6 +188,13 @@ test('filter -> map -> reduce', (t) => {
     .build();
 
   t.is(lfn([1, 2, 3, 4]), 14);
+
+  lfn = turbo<number>()
+    .filter((item) => item % 2 === 0)
+    .reduce((acc, item) => acc + item, 0)
+    .build();
+
+  t.is(lfn([1, 2, 3, 4]), 6);
 });
 
 test('build: undefined', (t) => {
