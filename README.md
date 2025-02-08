@@ -22,12 +22,12 @@ npm install turbo-array
 ```typescript
 import { turbo } from 'turbo-array';
 
-// Build one time a "turbo" method
+// Create a pipeline (build it once)
 const complexSum = turbo()
   .filter((n) => n % 2 === 0)
   .map((n) => n * 2)
   .reduce((acc, n) => acc + n, 0)
-  .build();
+  .build(); // ⚡️ The build step optimizes the pipeline
 
 // Reuse multiple times
 complexSum([1, 2, 3, 4, 5]);
@@ -39,12 +39,12 @@ If you need to pass a variable context to turbo method
 ```typescript
 import { turbo } from 'turbo-array';
 
-// Build one time a "turbo" method
+// Create a pipeline (build it once)
 const complexSum = turbo()
   .filter((n) => n % 2 === 0)
   .map((n) => n * context.multiply)
   .reduce((acc, n) => acc + n, 0)
-  .build();
+  .build(); // ⚡️ The build step optimizes the pipeline
 
 // Reuse multiple times
 complexSum([1, 2, 3, 4, 5], { multiply: 2 });
