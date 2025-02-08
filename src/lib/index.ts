@@ -240,6 +240,7 @@ class Turbo<T = any> {
           head += `r = ${JSON.stringify(operation.initialValue)};`;
         } else if (operation.type === 'join') {
           head += 'r = "";';
+          head += `const separator = ${JSON.stringify(operation.separator)};`
         } else if (operation.type === 'find') {
           head += 'r = undefined;';
         } else if (operation.type === 'findIndex') {
@@ -263,7 +264,7 @@ class Turbo<T = any> {
           body += `${operation.type}_${i}(a, idx);`;
         } else if (operation.type === 'join') {
           body += 'r += a;';
-          body += `if (idx < last) r += ${JSON.stringify(operation.separator)};`;
+          body += `if (idx < last) r += separator;`;
         } else if (operation.type === 'find') {
           body += `if (${operation.type}_${i}(a, idx)) return a;`;
         } else if (operation.type === 'findIndex') {
