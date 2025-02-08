@@ -166,13 +166,21 @@ test('reduce: obj', (t) => {
 });
 
 test('filter -> map -> reduce', (t) => {
-  const lfn = turbo<number>()
+  let lfn = turbo<number>()
     .filter((item) => item % 2 === 0)
     .map((item) => item + 1)
     .reduce((acc, item) => acc + item, 0)
     .build();
 
   t.is(lfn([1, 2, 3, 4]), 8);
+
+  lfn = turbo<number>()
+    .map((item) => item + 1)
+    .filter((item) => item % 2 === 0)
+    .reduce((acc, item) => acc + item, 0)
+    .build();
+
+  t.is(lfn([1, 2, 3, 4]), 6);
 });
 
 test('build: undefined', (t) => {
