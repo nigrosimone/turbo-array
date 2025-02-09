@@ -221,8 +221,6 @@ class Turbo<T = any> {
         } else {
           head += 'const result = new Array(array.length);\n';
         }
-      } else {
-        head += 'let result;\n';
       }
 
       let indexName: string;
@@ -252,20 +250,20 @@ class Turbo<T = any> {
         }
 
         if (operation.type === 'reduce') {
-          finalResult = `result = ${JSON.stringify(operation.initialValue)};\n`;
+          finalResult = `let result = ${JSON.stringify(operation.initialValue)};\n`;
         } else if (operation.type === 'join') {
-          finalResult = 'result = "";\n';
+          finalResult = 'let result = "";\n';
           head += `const separator = ${JSON.stringify(operation.separator)};\n`;
         } else if (operation.type === 'find') {
-          finalResult = 'result = undefined;\n';
+          finalResult = 'let result = undefined;\n';
         } else if (operation.type === 'findIndex') {
-          finalResult = 'result = -1;\n';
+          finalResult = 'let result = -1;\n';
         } else if (operation.type === 'some') {
-          finalResult = 'result = false;\n';
+          finalResult = 'let result = false;\n';
         } else if (operation.type === 'every') {
-          finalResult = 'result = true;\n';
+          finalResult = 'let result = true;\n';
         } else if (operation.type === 'forEach') {
-          finalResult = 'result = undefined;\n';
+          finalResult = 'let result = undefined;\n';
         }
 
         if (operation.type === 'filter') {
