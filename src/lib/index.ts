@@ -192,6 +192,7 @@ class Turbo<T = any> {
   forEach(callbackfn: (value: T, index: number) => void): Turbo<T> {
     if (!this._fn) {
       this._operations.push({ type: 'forEach', fn: callbackfn });
+      this._hasReduce = true;
     }
     return this;
   }
@@ -262,6 +263,8 @@ class Turbo<T = any> {
           head += 'result = false;\n';
         } else if (operation.type === 'every') {
           head += 'result = true;\n';
+        } else if (operation.type === 'forEach') {
+          head += 'result = undefined;\n';
         }
 
         if (operation.type === 'filter') {

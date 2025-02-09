@@ -175,8 +175,7 @@ test('forEach: obj', (t) => {
   const lfn = turbo<Obj>().forEach(f).build();
 
   const turboContext: { arr: Array<string> } = { arr: [] };
-  lfn(data, turboContext);
-  data.forEach(f);
+  t.deepEqual(lfn(data, turboContext), data.forEach(f));
   t.deepEqual(turboContext, context);
 });
 
@@ -184,6 +183,7 @@ test('filter -> map -> reduce', (t) => {
   let lfn = turbo<number>()
     .filter((item) => item % 2 === 0)
     .map((item) => item + 1)
+    .forEach(function () { })
     .reduce((acc, item) => acc + item, 0)
     .build();
 
@@ -192,6 +192,7 @@ test('filter -> map -> reduce', (t) => {
   lfn = turbo<number>()
     .map((item) => item + 1)
     .filter((item) => item % 2 === 0)
+    .forEach(function () { })
     .reduce((acc, item) => acc + item, 0)
     .build();
 
