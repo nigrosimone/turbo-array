@@ -1,41 +1,41 @@
 type Operation<T = any, U = any> =
   | {
-      type: 'filter';
-      fn: (value: T, index: number) => unknown;
-    }
+    type: 'filter';
+    fn: (value: T, index: number) => unknown;
+  }
   | {
-      type: 'find';
-      fn: (value: T, index: number, obj: T[]) => unknown;
-    }
+    type: 'find';
+    fn: (value: T, index: number, obj: T[]) => unknown;
+  }
   | {
-      type: 'findIndex';
-      fn: (value: T, index: number, obj: T[]) => unknown;
-    }
+    type: 'findIndex';
+    fn: (value: T, index: number, obj: T[]) => unknown;
+  }
   | {
-      type: 'some';
-      fn: (value: T, index: number) => boolean;
-    }
+    type: 'some';
+    fn: (value: T, index: number) => boolean;
+  }
   | {
-      type: 'every';
-      fn: (value: T, index: number) => boolean;
-    }
+    type: 'every';
+    fn: (value: T, index: number) => boolean;
+  }
   | {
-      type: 'map';
-      fn: (value: T, index: number) => U;
-    }
+    type: 'map';
+    fn: (value: T, index: number) => U;
+  }
   | {
-      type: 'reduce';
-      fn: (previousValue: U, currentValue: T, currentIndex: number) => U;
-      initialValue: U;
-    }
+    type: 'reduce';
+    fn: (previousValue: U, currentValue: T, currentIndex: number) => U;
+    initialValue: U;
+  }
   | {
-      type: 'forEach';
-      fn: (value: T, index: number) => void;
-    }
+    type: 'forEach';
+    fn: (value: T, index: number) => void;
+  }
   | {
-      type: 'join';
-      separator: string;
-    };
+    type: 'join';
+    separator: string;
+  };
 
 type LastOperation<T = any, U = T> = { build: () => (array: T[], context?: Record<string, any>) => U };
 
@@ -274,7 +274,7 @@ class Turbo<T = any> {
         } else if (operation.type === 'reduce') {
           body += `    result = ${operation.type}_${i}(result, item, ${indexName});\n`;
         } else if (operation.type === 'forEach') {
-          body += `${operation.type}_${i}(item, ${indexName});\n`;
+          body += `    ${operation.type}_${i}(item, ${indexName});\n`;
         } else if (operation.type === 'join') {
           body += '    result += item;\n';
           body += `    if (${indexName} < last) result += separator;\n`;

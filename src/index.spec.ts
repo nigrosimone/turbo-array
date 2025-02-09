@@ -165,6 +165,21 @@ test('reduce: obj', (t) => {
   t.deepEqual(lfn(data), data.reduce(m, ''));
 });
 
+test('forEach: obj', (t) => {
+  type Obj = { id: number };
+
+  const context: { arr: Array<string> } = { arr: [] };
+  const f = (item: Obj, index: number) => context.arr.push(item.id + '-' + index);
+  const data: Array<Obj> = [{ id: 1 }, { id: 2 }, { id: 3 }];
+
+  const lfn = turbo<Obj>().forEach(f).build();
+
+  const turboContext: { arr: Array<string> } = { arr: [] };
+  lfn(data, turboContext);
+  data.forEach(f);
+  t.deepEqual(turboContext, context);
+});
+
 test('filter -> map -> reduce', (t) => {
   let lfn = turbo<number>()
     .filter((item) => item % 2 === 0)
