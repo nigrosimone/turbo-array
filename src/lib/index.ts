@@ -50,7 +50,7 @@ const cache = new Map<string, Turbo<any>>();
  * accumulated operations on an array.
  */
 class Turbo<T = any> {
-  private _operations: Array<Operation<T>> = [];
+  private readonly _operations: Array<Operation<T>> = [];
   private _hasReduce = false;
   private _hasFilter = false;
   private _fn: ToArray<T> | undefined;
@@ -291,7 +291,7 @@ class Turbo<T = any> {
     }
 
     this._fn = new Function('l', 'context', head + body + foot) as ToArray<T>;
-    this._operations = [];
+    this._operations.length = 0;
     return this._fn;
   }
 }
