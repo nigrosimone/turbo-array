@@ -14,4 +14,6 @@ const lFilterMap = turbo<number>()
     .reduce(r, 0)
     .build();
 
+console.log(lFilterMap.toString());
+
 console.log(lFilterMap(data));

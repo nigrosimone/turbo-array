@@ -206,7 +206,8 @@ class Turbo<T = any> {
       return this._fn;
     }
 
-    let head = 'if (!Array.isArray(array)) throw new Error("Invalid parameters");\n';
+    let method = 'if (!Array.isArray(array)) throw new Error("Invalid parameters");\n';
+    let head = '';
     let body = '';
     let foot = '';
 
@@ -233,7 +234,7 @@ class Turbo<T = any> {
         const operation = this._operations[i];
         const fn = (operation as any)?.fn;
         if (typeof fn === 'function') {
-          head += `const ${operation.type}_${i} = ${fn.toString()};\n`;
+          method += `const ${operation.type}_${i} = ${fn.toString()};\n`;
         }
 
         if (operation.type === 'reduce') {
@@ -290,7 +291,7 @@ class Turbo<T = any> {
       foot += 'return array;\n';
     }
 
-    const code = head + body + foot;
+    const code = method + head + body + foot;
 
     this._fn = new Function('array', 'context', code) as ToArray<T>;
     this._operations.length = 0;
