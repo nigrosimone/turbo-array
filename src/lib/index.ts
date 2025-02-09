@@ -54,7 +54,7 @@ class Turbo<T = any> {
   private _hasReduce = false;
   private _hasFilter = false;
   private _fn: ToArray<T> | undefined;
-  private _lastOperation = {
+  private readonly _lastOperation = {
     build: this.build.bind(this),
   };
 
