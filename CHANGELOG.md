@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/nigrosimone/turbo-array/compare/v1.1.2...v1.2.0) (2025-02-09)
+
+
+### Features
+
+* add benchmark tests for turbo filter, map, and reduce functions ([2f8aa94](https://github.com/nigrosimone/turbo-array/commit/2f8aa9403ce1c24d99f0717e7722d0f7709a0a65))
+* enhance forEach method in Turbo class and update tests ([776f2bc](https://github.com/nigrosimone/turbo-array/commit/776f2bc4a52e50f5030be3e0ec880f310e214e6f))
+* implement forEach method in Turbo class and add corresponding tests ([97f92d4](https://github.com/nigrosimone/turbo-array/commit/97f92d4c526c1cc6ab2962d0da1a68205669eda3))
+
 ### [1.1.2](https://github.com/nigrosimone/turbo-array/compare/v1.1.0...v1.1.2) (2025-02-08)
 
 
