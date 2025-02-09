@@ -243,6 +243,7 @@ class Turbo<T = any> {
         indexName = 'i';
       }
 
+      let finalResult = '';
       for (let i = 0, e = this._operations.length; i < e; i++) {
         const operation = this._operations[i];
         const fn = (operation as any)?.fn;
@@ -251,20 +252,20 @@ class Turbo<T = any> {
         }
 
         if (operation.type === 'reduce') {
-          head += `result = ${JSON.stringify(operation.initialValue)};\n`;
+          finalResult = `result = ${JSON.stringify(operation.initialValue)};\n`;
         } else if (operation.type === 'join') {
-          head += 'result = "";\n';
+          finalResult = 'result = "";\n';
           head += `const separator = ${JSON.stringify(operation.separator)};\n`;
         } else if (operation.type === 'find') {
-          head += 'result = undefined;\n';
+          finalResult = 'result = undefined;\n';
         } else if (operation.type === 'findIndex') {
-          head += 'result = -1;\n';
+          finalResult = 'result = -1;\n';
         } else if (operation.type === 'some') {
-          head += 'result = false;\n';
+          finalResult = 'result = false;\n';
         } else if (operation.type === 'every') {
-          head += 'result = true;\n';
+          finalResult = 'result = true;\n';
         } else if (operation.type === 'forEach') {
-          head += 'result = undefined;\n';
+          finalResult = 'result = undefined;\n';
         }
 
         if (operation.type === 'filter') {
@@ -291,6 +292,7 @@ class Turbo<T = any> {
           body += `    if (!${operation.type}_${i}(item, ${indexName})) return false;\n`;
         }
       }
+      head += finalResult;
 
       if (!this._hasReduce) {
         if (this._hasFilter) {

@@ -10,10 +10,10 @@ const r = (acc: number, item: number) => acc + item;
 const fe = (item: number) => { };
 
 const method = turbo<number>()
-    //.filter(f)
-    //.map(m)
+    .filter(f)
+    .map(m)
     .forEach(fe)
-    //.reduce(r, 0)
+    .reduce(r, 0)
     .build();
 
 console.log(method.toString());
