@@ -229,7 +229,7 @@ class Turbo<T = any> {
       if (this._hasJoin) {
         body += 'let last = e - 1;\n';
       }
-      if (this._hasFilter) {
+      if (this._hasFilter && this._operations.length > 1) {
         body += 'let idx = 0, i = 0;\n';
         body += 'for (; i < e; i++, idx++) {\n';
         body += '    item = array[i];\n';
@@ -268,7 +268,9 @@ class Turbo<T = any> {
 
         if (operation.type === 'filter') {
           body += `    if (!${operation.type}_${i}(item, ${indexName})) {\n`;
-          body += `    ${indexName}--;\n`;
+          if (this._operations.length > 1) {
+            body += `    ${indexName}--;\n`;
+          }
           body += '    continue;\n';
           body += '    }\n';
         } else if (operation.type === 'map') {
