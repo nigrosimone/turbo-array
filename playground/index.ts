@@ -8,12 +8,12 @@ const f = (item: number) => item % 2 === 0;
 const m = (item: number) => item + 1;
 const r = (acc: number, item: number) => acc + item;
 
-const lFilterMap = turbo<number>()
+const method = turbo<number>()
     .filter(f)
     .map(m)
     .reduce(r, 0)
     .build();
 
-console.log(lFilterMap.toString());
+console.log(method.toString());
 
-console.log(lFilterMap(data));
+console.log(method(data));

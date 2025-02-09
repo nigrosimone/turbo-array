@@ -1,41 +1,41 @@
 type Operation<T = any, U = any> =
   | {
-    type: 'filter';
-    fn: (value: T, index: number) => unknown;
-  }
+      type: 'filter';
+      fn: (value: T, index: number) => unknown;
+    }
   | {
-    type: 'find';
-    fn: (value: T, index: number, obj: T[]) => unknown;
-  }
+      type: 'find';
+      fn: (value: T, index: number, obj: T[]) => unknown;
+    }
   | {
-    type: 'findIndex';
-    fn: (value: T, index: number, obj: T[]) => unknown;
-  }
+      type: 'findIndex';
+      fn: (value: T, index: number, obj: T[]) => unknown;
+    }
   | {
-    type: 'some';
-    fn: (value: T, index: number) => boolean;
-  }
+      type: 'some';
+      fn: (value: T, index: number) => boolean;
+    }
   | {
-    type: 'every';
-    fn: (value: T, index: number) => boolean;
-  }
+      type: 'every';
+      fn: (value: T, index: number) => boolean;
+    }
   | {
-    type: 'map';
-    fn: (value: T, index: number) => U;
-  }
+      type: 'map';
+      fn: (value: T, index: number) => U;
+    }
   | {
-    type: 'reduce';
-    fn: (previousValue: U, currentValue: T, currentIndex: number) => U;
-    initialValue: U;
-  }
+      type: 'reduce';
+      fn: (previousValue: U, currentValue: T, currentIndex: number) => U;
+      initialValue: U;
+    }
   | {
-    type: 'forEach';
-    fn: (value: T, index: number) => void;
-  }
+      type: 'forEach';
+      fn: (value: T, index: number) => void;
+    }
   | {
-    type: 'join';
-    separator: string;
-  };
+      type: 'join';
+      separator: string;
+    };
 
 type LastOperation<T = any, U = T> = { build: () => (array: T[], context?: Record<string, any>) => U };
 
@@ -53,6 +53,7 @@ class Turbo<T = any> {
   private readonly _operations: Array<Operation<T>> = [];
   private _hasReduce = false;
   private _hasFilter = false;
+  private _hasJoin = false;
   private _fn: ToArray<T> | undefined;
   private readonly _lastOperation = {
     build: this.build.bind(this),
@@ -177,6 +178,7 @@ class Turbo<T = any> {
     if (!this._fn) {
       this._operations.push({ type: 'join', separator });
       this._hasReduce = true;
+      this._hasJoin = true;
     }
     return this._lastOperation as unknown as LastOperation<T, string>;
   }
@@ -222,13 +224,23 @@ class Turbo<T = any> {
         head += 'let result;\n';
       }
 
-      body += 'let i = 0, e = array.length, last = e - 1, idx = 0, item;\n';
-      if (this._hasFilter) {
-        body += 'for (; i < e; i++, idx++) {\n';
-      } else {
-        body += 'for (; i < e; i++, idx = i) {\n';
+      let indexName: string;
+
+      body += 'let e = array.length, item;\n';
+      if (this._hasJoin) {
+        body += 'let last = e - 1;\n';
       }
-      body += '    item = array[i];\n';
+      if (this._hasFilter) {
+        body += 'let idx = 0, i = 0;\n';
+        body += 'for (; i < e; i++, idx++) {\n';
+        body += '    item = array[i];\n';
+        indexName = 'idx';
+      } else {
+        body += 'let i = 0;\n';
+        body += 'for (; i < e; i++) {\n';
+        body += '    item = array[i];\n';
+        indexName = 'i';
+      }
 
       for (let i = 0, e = this._operations.length; i < e; i++) {
         const operation = this._operations[i];
@@ -241,7 +253,7 @@ class Turbo<T = any> {
           head += `result = ${JSON.stringify(operation.initialValue)};\n`;
         } else if (operation.type === 'join') {
           head += 'result = "";\n';
-          head += `const separator = ${JSON.stringify(operation.separator)};\n`
+          head += `const separator = ${JSON.stringify(operation.separator)};\n`;
         } else if (operation.type === 'find') {
           head += 'result = undefined;\n';
         } else if (operation.type === 'findIndex') {
@@ -253,27 +265,27 @@ class Turbo<T = any> {
         }
 
         if (operation.type === 'filter') {
-          body += `    if (!${operation.type}_${i}(item, idx)) {\n`;
-          body += '    idx--;\n';
+          body += `    if (!${operation.type}_${i}(item, ${indexName})) {\n`;
+          body += `    ${indexName}--;\n`;
           body += '    continue;\n';
           body += '    }\n';
         } else if (operation.type === 'map') {
-          body += `    item = ${operation.type}_${i}(item, idx);\n`;
+          body += `    item = ${operation.type}_${i}(item, ${indexName});\n`;
         } else if (operation.type === 'reduce') {
-          body += `    result = ${operation.type}_${i}(result, item, idx);\n`;
+          body += `    result = ${operation.type}_${i}(result, item, ${indexName});\n`;
         } else if (operation.type === 'forEach') {
-          body += `${operation.type}_${i}(a, idx);\n`;
+          body += `${operation.type}_${i}(item, ${indexName});\n`;
         } else if (operation.type === 'join') {
           body += '    result += item;\n';
-          body += `    if (idx < last) result += separator;\n`;
+          body += `    if (${indexName} < last) result += separator;\n`;
         } else if (operation.type === 'find') {
-          body += `    if (${operation.type}_${i}(item, idx)) return item;\n`;
+          body += `    if (${operation.type}_${i}(item, ${indexName})) return item;\n`;
         } else if (operation.type === 'findIndex') {
-          body += `    if (${operation.type}_${i}(item, idx)) return idx;\n`;
+          body += `    if (${operation.type}_${i}(item, ${indexName})) return ${indexName};\n`;
         } else if (operation.type === 'some') {
-          body += `    if (${operation.type}_${i}(item, idx)) return true;\n`;
+          body += `    if (${operation.type}_${i}(item, ${indexName})) return true;\n`;
         } else if (operation.type === 'every') {
-          body += `    if (!${operation.type}_${i}(item, idx)) return false;\n`;
+          body += `    if (!${operation.type}_${i}(item, ${indexName})) return false;\n`;
         }
       }
 
@@ -281,14 +293,14 @@ class Turbo<T = any> {
         if (this._hasFilter) {
           body += '    result.push(item);\n';
         } else {
-          body += '    result[i] = item;\n';
+          body += `    result[${indexName}] = item;\n`;
         }
       }
 
       foot += '}\n'; // end for
-      foot += 'return result;\n';
+      foot += 'return result;';
     } else {
-      foot += 'return array;\n';
+      foot += 'return array;';
     }
 
     const code = method + head + body + foot;
