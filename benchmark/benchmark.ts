@@ -76,3 +76,26 @@ new Suite('filterJoin')
         console.log('Fastest is ' + this.filter('fastest').map('name'));
     })
     .run();
+
+
+new Suite('cached')
+    .add('turbo cached: filterJoin', function () {
+        const lFilterJoin = turbo<number>('xxx')
+            .filter(f)
+            .join()
+            .build();
+        lFilterJoin(data);
+    })
+    .add('vanilla: filterJoin', function () {
+        data
+            .filter(f)
+            .join();
+    })
+    .on('cycle', function (event: any) {
+        console.log(String(event.target));
+    })
+    .on('complete', function () {
+        // @ts-ignore
+        console.log('Fastest is ' + this.filter('fastest').map('name'));
+    })
+    .run();
