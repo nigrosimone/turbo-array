@@ -99,3 +99,58 @@ new Suite('cached')
         console.log('Fastest is ' + this.filter('fastest').map('name'));
     })
     .run();
+
+
+const lFilter = turbo<number>().filter(f).build();
+new Suite('filter')
+    .add('turbo: filter', function () {
+        lFilter(data);
+    })
+    .add('vanilla: filter', function () {
+        data
+            .filter(f);
+    })
+    .on('cycle', function (event: any) {
+        console.log(String(event.target));
+    })
+    .on('complete', function () {
+        // @ts-ignore
+        console.log('Fastest is ' + this.filter('fastest').map('name'));
+    })
+    .run();
+
+const lMap = turbo<number>().map(m).build();
+new Suite('map')
+    .add('turbo: map', function () {
+        lMap(data);
+    })
+    .add('vanilla: map', function () {
+        data
+            .map(m);
+    })
+    .on('cycle', function (event: any) {
+        console.log(String(event.target));
+    })
+    .on('complete', function () {
+        // @ts-ignore
+        console.log('Fastest is ' + this.filter('fastest').map('name'));
+    })
+    .run();
+
+const lReduce = turbo<number>().reduce(r, 0).build();
+new Suite('reduce')
+    .add('turbo: reduce', function () {
+        lReduce(data);
+    })
+    .add('vanilla: reduce', function () {
+        data
+            .reduce(r, 0);
+    })
+    .on('cycle', function (event: any) {
+        console.log(String(event.target));
+    })
+    .on('complete', function () {
+        // @ts-ignore
+        console.log('Fastest is ' + this.filter('fastest').map('name'));
+    })
+    .run();
