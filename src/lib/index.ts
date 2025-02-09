@@ -206,91 +206,93 @@ class Turbo<T = any> {
       return this._fn;
     }
 
-    let head = 'if (!Array.isArray(l)) throw new Error("Invalid parameters");';
+    let head = 'if (!Array.isArray(array)) throw new Error("Invalid parameters");\n';
     let body = '';
     let foot = '';
 
     if (this._operations.length > 0) {
       if (!this._hasReduce) {
         if (this._hasFilter) {
-          head += 'const r = [];';
+          head += 'const result = [];\n';
         } else {
-          head += 'const r = new Array(l.length);';
+          head += 'const result = new Array(array.length);\n';
         }
       } else {
-        head += 'let r;';
+        head += 'let result;\n';
       }
 
-      body += 'let i = 0, e = l.length, last = e - 1, idx = 0, a;';
+      body += 'let i = 0, e = array.length, last = e - 1, idx = 0, item;\n';
       if (this._hasFilter) {
-        body += 'for (; i < e; i++, idx++) {';
+        body += 'for (; i < e; i++, idx++) {\n';
       } else {
-        body += 'for (; i < e; i++, idx = i) {';
+        body += 'for (; i < e; i++, idx = i) {\n';
       }
-      body += 'a = l[i];';
+      body += '    item = array[i];\n';
 
       for (let i = 0, e = this._operations.length; i < e; i++) {
         const operation = this._operations[i];
         const fn = (operation as any)?.fn;
         if (typeof fn === 'function') {
-          head += `const ${operation.type}_${i} = ${fn.toString()};`;
+          head += `const ${operation.type}_${i} = ${fn.toString()};\n`;
         }
 
         if (operation.type === 'reduce') {
-          head += `r = ${JSON.stringify(operation.initialValue)};`;
+          head += `result = ${JSON.stringify(operation.initialValue)};\n`;
         } else if (operation.type === 'join') {
-          head += 'r = "";';
-          head += `const separator = ${JSON.stringify(operation.separator)};`
+          head += 'result = "";\n';
+          head += `const separator = ${JSON.stringify(operation.separator)};\n`
         } else if (operation.type === 'find') {
-          head += 'r = undefined;';
+          head += 'result = undefined;\n';
         } else if (operation.type === 'findIndex') {
-          head += 'r = -1;';
+          head += 'result = -1;\n';
         } else if (operation.type === 'some') {
-          head += 'r = false;';
+          head += 'result = false;\n';
         } else if (operation.type === 'every') {
-          head += 'r = true;';
+          head += 'result = true;\n';
         }
 
         if (operation.type === 'filter') {
-          body += `if (!${operation.type}_${i}(a, idx)) {`;
-          body += 'idx--;';
-          body += 'continue;';
-          body += '}';
+          body += `    if (!${operation.type}_${i}(item, idx)) {\n`;
+          body += '    idx--;\n';
+          body += '    continue;\n';
+          body += '    }\n';
         } else if (operation.type === 'map') {
-          body += `a = ${operation.type}_${i}(a, idx);`;
+          body += `    item = ${operation.type}_${i}(item, idx);\n`;
         } else if (operation.type === 'reduce') {
-          body += `r = ${operation.type}_${i}(r, a, idx);`;
+          body += `    result = ${operation.type}_${i}(result, item, idx);\n`;
         } else if (operation.type === 'forEach') {
-          body += `${operation.type}_${i}(a, idx);`;
+          body += `${operation.type}_${i}(a, idx);\n`;
         } else if (operation.type === 'join') {
-          body += 'r += a;';
-          body += `if (idx < last) r += separator;`;
+          body += '    result += item;\n';
+          body += `    if (idx < last) result += separator;\n`;
         } else if (operation.type === 'find') {
-          body += `if (${operation.type}_${i}(a, idx)) return a;`;
+          body += `    if (${operation.type}_${i}(item, idx)) return item;\n`;
         } else if (operation.type === 'findIndex') {
-          body += `if (${operation.type}_${i}(a, idx)) return idx;`;
+          body += `    if (${operation.type}_${i}(item, idx)) return idx;\n`;
         } else if (operation.type === 'some') {
-          body += `if (${operation.type}_${i}(a, idx)) return true;`;
+          body += `    if (${operation.type}_${i}(item, idx)) return true;\n`;
         } else if (operation.type === 'every') {
-          body += `if (!${operation.type}_${i}(a, idx)) return false;`;
+          body += `    if (!${operation.type}_${i}(item, idx)) return false;\n`;
         }
       }
 
       if (!this._hasReduce) {
         if (this._hasFilter) {
-          body += 'r.push(a);';
+          body += '    result.push(item);\n';
         } else {
-          body += 'r[i] = a;';
+          body += '    result[i] = item;\n';
         }
       }
 
-      foot += '}'; // end for
-      foot += 'return r;';
+      foot += '}\n'; // end for
+      foot += 'return result;\n';
     } else {
-      foot += 'return l;';
+      foot += 'return array;\n';
     }
 
-    this._fn = new Function('l', 'context', head + body + foot) as ToArray<T>;
+    const code = head + body + foot;
+
+    this._fn = new Function('array', 'context', code) as ToArray<T>;
     this._operations.length = 0;
     return this._fn;
   }
