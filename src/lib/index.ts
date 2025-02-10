@@ -269,9 +269,9 @@ class Turbo<T = any> {
         if (operation.type === 'filter') {
           body += `    if (!${operation.type}_${i}(item, ${indexName})) {\n`;
           if (this._operations.length > 1) {
-            body += `    ${indexName}--;\n`;
+            body += `        ${indexName}--;\n`;
           }
-          body += '    continue;\n';
+          body += '        continue;\n';
           body += '    }\n';
         } else if (operation.type === 'map') {
           body += `    item = ${operation.type}_${i}(item, ${indexName});\n`;
