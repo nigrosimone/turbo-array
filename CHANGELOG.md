@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.2.2](https://github.com/nigrosimone/turbo-array/compare/v1.2.0...v1.2.2) (2025-02-15)
+
+
+### Bug Fixes
+
+* add performance timing to method execution and improve Turbo class operation handling ([d75e55b](https://github.com/nigrosimone/turbo-array/commit/d75e55bb338cef4faa852fc761186f244bc69575))
+* change variable declaration to let for result in Turbo class operations ([ceb22a7](https://github.com/nigrosimone/turbo-array/commit/ceb22a736ef7af3bfe803a5709659fa5a224b7c3))
+* refine filter logic in Turbo class to handle multiple operations correctly ([2a517e6](https://github.com/nigrosimone/turbo-array/commit/2a517e6afedae6651c5ede922f9bc365410e98ad))
+* update Turbo class to correctly handle final results in operations ([9bb127f](https://github.com/nigrosimone/turbo-array/commit/9bb127ff02aa336a3a993ba7eb6bc4e0f50ca029))
+
 ## [1.2.0](https://github.com/nigrosimone/turbo-array/compare/v1.1.2...v1.2.0) (2025-02-09)
 
 
