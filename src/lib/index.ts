@@ -209,7 +209,7 @@ class Turbo<T = any> {
       return this._fn;
     }
 
-    let method = 'if (!Array.isArray(array)) throw new Error("Invalid parameters");\n';
+    let method = '"use strict"; if (!Array.isArray(array)) throw new Error("Invalid parameters");\n';
     let head = '';
     let body = '';
     let foot = '';
