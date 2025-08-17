@@ -1,6 +1,6 @@
 {
   "name": "turbo-array",
-  "version": "1.2.2",
+  "version": "1.2.4",
   "description": "Turbo Array is a lightweight, high-performance, fast library that allows you to build lazy evaluation pipelines for arrays.",
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",

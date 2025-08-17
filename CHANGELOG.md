@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.2.4](https://github.com/nigrosimone/turbo-array/compare/v1.2.2...v1.2.4) (2025-08-17)
+
+
+### Bug Fixes
+
+* enforce strict mode ([408c404](https://github.com/nigrosimone/turbo-array/commit/408c40489ccc4635a703b18bb791ab7f2708b959))
+
 ### [1.2.2](https://github.com/nigrosimone/turbo-array/compare/v1.2.0...v1.2.2) (2025-02-15)
 
 
