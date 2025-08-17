@@ -54,6 +54,45 @@ complexSum([1, 2, 3, 4, 5], { multiply: 2 });
 complexSum([1, 2, 3, 4, 5], { multiply: 3 });
 ```
 
+## How build works
+
+The `build` method constructs a function that processes the array in a single loop. Eg.:
+
+```typescript
+import { turbo } from 'turbo-array';
+
+const complexSum = turbo()
+  .filter((n) => n % 2 === 0)
+  .map((n) => n * 2)
+  .reduce((acc, n) => acc + n, 0)
+  .build();
+```
+
+The `complexSum()` method become:
+
+```js
+function anonymous(array, context) {
+  "use strict";
+  if (!Array.isArray(array)) throw new Error("Invalid parameters");
+  const filter_0 = (n) => n % 2 === 0;
+  const map_1 = (n) => n \* 2;
+  const reduce_2 = (acc, n) => acc + n;
+  let result = 0;
+  let e = array.length, item;
+  let idx = 0, i = 0;
+  for (; i < e; i++, idx++) {
+    item = array[i];
+    if (!filter_0(item, idx)) {
+      idx--;
+      continue;
+    }
+    item = map_1(item, idx);
+    result = reduce_2(result, item, idx);
+  }
+  return result;
+}
+```
+
 ## Support
 
 This is an open-source project. Star this [repository](https://github.com/nigrosimone/turbo-array), if you like it, or even [donate](https://www.paypal.com/paypalme/snwp). Thank you so much!
