@@ -75,7 +75,7 @@ function anonymous(array, context) {
   "use strict";
   if (!Array.isArray(array)) throw new Error("Invalid parameters");
   const filter_0 = (n) => n % 2 === 0;
-  const map_1 = (n) => n \* 2;
+  const map_1 = (n) => n * 2;
   const reduce_2 = (acc, n) => acc + n;
   let result = 0;
   let e = array.length, item;
