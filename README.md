@@ -39,8 +39,11 @@ If you need to pass a variable context to turbo method
 ```typescript
 import { turbo } from 'turbo-array';
 
+type Context = { multiply: number };
+declare var context: Context;
+
 // Create a pipeline (build it once)
-const complexSum = turbo()
+const complexSum = turbo<number, Context>()
   .filter((n) => n % 2 === 0)
   .map((n) => n * context.multiply)
   .reduce((acc, n) => acc + n, 0)

@@ -37,11 +37,11 @@ type Operation<T = any, U = any> =
     separator: string;
   };
 
-type LastOperation<T = any, U = T> = { build: () => (array: T[], context?: Record<string, any>) => U };
+type LastOperation<T = any, U = T, C extends Record<string, any> = Record<string, any>> = { build: () => (array: T[], context?: C) => U };
 
-type ToArray<T = any> = (array: T[], context?: Record<string, any>) => T[];
+type ToArray<T = any, C extends Record<string, any> = Record<string, any>> = (array: T[], context?: C) => T[];
 
-const cache = new Map<string, Turbo<any>>();
+const cache = new Map<string, Turbo<any, any>>();
 
 /**
  * The Turbo class provides a way to build a sequence of operations (filter, map, reduce, forEach)
@@ -49,12 +49,12 @@ const cache = new Map<string, Turbo<any>>();
  * when the build method is called, which constructs and returns a function that performs the
  * accumulated operations on an array.
  */
-class Turbo<T = any> {
+class Turbo<T = any, C extends Record<string, any> = Record<string, any>> {
   private readonly _operations: Array<Operation<T>> = [];
   private _hasReduce = false;
   private _hasFilter = false;
   private _hasJoin = false;
-  private _fn: ToArray<T> | undefined;
+  private _fn: ToArray<T, C> | undefined;
   private readonly _lastOperation = {
     build: this.build.bind(this),
   };
@@ -68,7 +68,7 @@ class Turbo<T = any> {
    * @param predicate.index - The index of the current element being processed in the array.
    * @returns The current instance of the Turbo class to allow for method chaining.
    */
-  filter(predicate: (value: T, index: number) => unknown): Turbo<T> {
+  filter(predicate: (value: T, index: number) => unknown): Turbo<T, C> {
     if (!this._fn) {
       this._operations.push({ type: 'filter', fn: predicate });
       this._hasFilter = true;
@@ -84,12 +84,12 @@ class Turbo<T = any> {
    * for each element in the array until the predicate returns a truthy value, or until the end of the array.
    * @returns The current Turbo instance with the 'some' operation added to the operations queue.
    */
-  some(predicate: (value: T, index: number) => boolean): LastOperation<T, boolean> {
+  some(predicate: (value: T, index: number) => boolean): LastOperation<T, boolean, C> {
     if (!this._fn) {
       this._operations.push({ type: 'some', fn: predicate });
       this._hasReduce = true;
     }
-    return this._lastOperation as unknown as LastOperation<T, boolean>;
+    return this._lastOperation as unknown as LastOperation<T, boolean, C>;
   }
 
   /**
@@ -100,12 +100,12 @@ class Turbo<T = any> {
    * or until the end of the array.
    * @returns A `LastOperation` object containing the result of the `every` operation.
    */
-  every(predicate: (value: T, index: number) => boolean): LastOperation<T, boolean> {
+  every(predicate: (value: T, index: number) => boolean): LastOperation<T, boolean, C> {
     if (!this._fn) {
       this._operations.push({ type: 'every', fn: predicate });
       this._hasReduce = true;
     }
-    return this._lastOperation as unknown as LastOperation<T, boolean>;
+    return this._lastOperation as unknown as LastOperation<T, boolean, C>;
   }
 
   /**
@@ -117,12 +117,12 @@ class Turbo<T = any> {
    * @param predicate.index - The index of the current element being processed in the array.
    * @returns An object with a `build` method that returns a function when called.
    */
-  find(predicate: (value: T, index: number) => unknown): LastOperation<T | undefined, T | undefined> {
+  find(predicate: (value: T, index: number) => unknown): LastOperation<T | undefined, T | undefined, C> {
     if (!this._fn) {
       this._operations.push({ type: 'find', fn: predicate });
       this._hasReduce = true;
     }
-    return this._lastOperation as unknown as LastOperation<T | undefined, T | undefined>;
+    return this._lastOperation as unknown as LastOperation<T | undefined, T | undefined, C>;
   }
 
   /**
@@ -132,12 +132,12 @@ class Turbo<T = any> {
    * @param predicate - A function that accepts up to two arguments. The findIndex method calls the predicate function once for each element in the array, in ascending order, until it finds one where predicate returns true. If such an element is found, findIndex immediately returns that element's index. Otherwise, findIndex returns -1.
    * @returns A `LastOperation` object containing the index of the first element in the array that passes the test. If no elements pass the test, the index will be -1.
    */
-  findIndex(predicate: (value: T, index: number) => unknown): LastOperation<T | undefined, number> {
+  findIndex(predicate: (value: T, index: number) => unknown): LastOperation<T | undefined, number, C> {
     if (!this._fn) {
       this._operations.push({ type: 'findIndex', fn: predicate });
       this._hasReduce = true;
     }
-    return this._lastOperation as unknown as LastOperation<T | undefined, number>;
+    return this._lastOperation as unknown as LastOperation<T | undefined, number, C>;
   }
 
   /**
@@ -146,11 +146,11 @@ class Turbo<T = any> {
    * @param mapper - A function that takes a value and its index, and returns a new value.
    * @returns A new Turbo instance with the mapping operation added to the operations queue.
    */
-  map<U = T>(mapper: (value: T, index: number) => U): Turbo<U> {
+  map<U = T>(mapper: (value: T, index: number) => U): Turbo<U, C> {
     if (!this._fn) {
       this._operations.push({ type: 'map', fn: mapper });
     }
-    return this as unknown as Turbo<U>;
+    return this as unknown as Turbo<U, C>;
   }
 
   /**
@@ -160,12 +160,12 @@ class Turbo<T = any> {
    * @param initialValue - The initial value to be used as the first argument to the first call of the reducer function.
    * @returns An object with a `build` method that, when called, returns a function to execute the operations.
    */
-  reduce<U>(reducer: (previousValue: U, currentValue: T, currentIndex: number) => U, initialValue: U): LastOperation<T, U> {
+  reduce<U>(reducer: (previousValue: U, currentValue: T, currentIndex: number) => U, initialValue: U): LastOperation<T, U, C> {
     if (!this._fn) {
       this._operations.push({ type: 'reduce', fn: reducer, initialValue });
       this._hasReduce = true;
     }
-    return this._lastOperation as unknown as LastOperation<T, U>;
+    return this._lastOperation as unknown as LastOperation<T, U, C>;
   }
 
   /**
@@ -174,13 +174,13 @@ class Turbo<T = any> {
    * @param separator - The string to use as a separator. Defaults to an empty string.
    * @returns An object with a `build` method that returns a function when called.
    */
-  join(separator = ','): LastOperation<T, string> {
+  join(separator = ','): LastOperation<T, string, C> {
     if (!this._fn) {
       this._operations.push({ type: 'join', separator });
       this._hasReduce = true;
       this._hasJoin = true;
     }
-    return this._lastOperation as unknown as LastOperation<T, string>;
+    return this._lastOperation as unknown as LastOperation<T, string, C>;
   }
 
   /**
@@ -189,7 +189,7 @@ class Turbo<T = any> {
    * @param callbackfn - A function that accepts up to two arguments. forEach calls the callbackfn function one time for each element in the array.
    * @returns The current instance of Turbo to allow for method chaining.
    */
-  forEach(callbackfn: (value: T, index: number) => void): Turbo<T> {
+  forEach(callbackfn: (value: T, index: number) => void): Turbo<T, C> {
     if (!this._fn) {
       this._operations.push({ type: 'forEach', fn: callbackfn });
       this._hasReduce = true;
@@ -202,9 +202,9 @@ class Turbo<T = any> {
    * The generated function processes an array according to the specified operations
    * (filter, map, reduce, forEach) and returns the result.
    *
-   * @returns {ToArray<T>} The generated function that processes an array.
+   * @returns {ToArray<T, C>} The generated function that processes an array.
    */
-  build(): ToArray<T> {
+  build(): ToArray<T, C> {
     if (this._fn) {
       return this._fn;
     }
@@ -320,17 +320,17 @@ class Turbo<T = any> {
  * Creates and returns a new instance of the Turbo class.
  * @param cacheKey - A key to store the instance in the cache.
  *
- * @returns {Turbo<T>} A new instance of the Turbo class.
+ * @returns {Turbo<T, C>} A new instance of the Turbo class.
  */
-export function turbo<T = any>(cacheKey?: string): Turbo<T> {
-  let result: Turbo<T> | undefined;
+export function turbo<T = any, C extends Record<string, any> = Record<string, any>>(cacheKey?: string): Turbo<T, C> {
+  let result: Turbo<T, C> | undefined;
   if (cacheKey) {
     result = cache.get(cacheKey);
     if (result) {
       return result;
     }
   }
-  result = new Turbo<T>();
+  result = new Turbo<T, C>();
   if (cacheKey) {
     cache.set(cacheKey, result);
   }

@@ -2,6 +2,9 @@ import { turbo } from '../';
 
 debugger;
 
+type Context = { multiply: number }
+declare var context: Context;
+
 const data = Array.from({ length: 30 }, (_, i) => i + 1);
 
 const f = (item: number) => item % 2 === 0;
@@ -10,7 +13,7 @@ const r = (acc: number, item: number) => acc + item;
 const fe = (item: number) => { };
 
 console.time('build');
-const method = turbo<number>()
+const method = turbo<number, Context>()
     .filter(f)
     .map(m)
     .forEach(fe)
@@ -19,7 +22,7 @@ const method = turbo<number>()
 console.timeEnd('build');
 
 console.time('method');
-const result = method(data);
+const result = method(data, { multiply: 1 });
 console.timeEnd('method');
 console.log(result);
 
