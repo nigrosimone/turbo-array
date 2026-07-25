@@ -405,7 +405,7 @@ class Turbo<T = any, C extends Record<string, any> = Record<string, any>, S = T>
       // The operations are inlined as source code, so anything whose
       // `toString()` is not a standalone function expression (method shorthand,
       // minifier artifacts, ...) cannot be compiled.
-      throw new TypeError(`turbo-array: the pipeline could not be compiled (${(error as Error).message}). Pass plain function expressions or arrow functions.`);
+      throw new TypeError(`turbo-array: the pipeline could not be compiled (${(error as Error).message}). Pass plain function expressions or arrow functions.`, { cause: error });
     }
 
     this._fn = factory(seed, structuredClone);

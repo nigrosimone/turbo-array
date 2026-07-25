@@ -36,37 +36,37 @@
     "doc:open": "open-cli build/docs/index.html",
     "doc:json": "typedoc src/index.ts --json build/docs/typedoc.json",
     "doc:publish": "gh-pages -m \"[ci skip] Updates\" -d build/docs",
-    "version": "commit-and-tag-version",
     "reset-hard": "git clean -dfx && git reset --hard && npm i",
-    "prepare-release": "run-s reset-hard test cov:check doc:html version doc:publish",
+    "prepare-release": "run-s reset-hard test cov:check doc:html release doc:publish",
     "bench": "tsx benchmark/benchmark.ts",
     "example": "tsx example/index.ts",
-    "dev": "tsx watch --inspect=9222 playground/index.ts"
+    "dev": "tsx watch --inspect=9222 playground/index.ts",
+    "release": "release-it"
   },
   "engines": {
     "node": ">=20"
   },
   "devDependencies": {
     "@eslint-community/eslint-plugin-eslint-comments": "^4.7.2",
-    "@eslint/js": "^9.39.2",
+    "@eslint/js": "^10.0.1",
+    "@release-it/conventional-changelog": "^11.0.1",
     "@types/benchmark": "^2.1.5",
     "@types/node": "^26.1.1",
     "@vitest/coverage-v8": "^4.1.10",
     "benchmark": "^2.1.4",
-    "commit-and-tag-version": "^13.1.0",
     "cspell": "^10.0.1",
-    "cz-conventional-changelog": "^3.3.0",
-    "eslint": "^9.39.2",
+    "eslint": "^10.8.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-functional": "^10.0.0",
-    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-import-x": "^4.17.1",
     "gh-pages": "^6.3.0",
     "npm-run-all2": "^9.0.2",
     "open-cli": "^9.0.0",
     "prettier": "^3.9.6",
+    "release-it": "^20.2.1",
     "tsx": "^4.23.1",
     "typedoc": "^0.28.20",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.3",
     "typescript-eslint": "^8.65.0",
     "vitest": "^4.1.10"
   },
@@ -79,11 +79,6 @@
     "LICENSE",
     "README.md"
   ],
-  "config": {
-    "commitizen": {
-      "path": "cz-conventional-changelog"
-    }
-  },
   "prettier": {
     "singleQuote": true,
     "printWidth": 180
