@@ -1,0 +1,31 @@
+{
+  "extends": "./tsconfig",
+  "compilerOptions": {
+    "incremental": false,
+    "noEmit": true,
+    "rootDir": ".",
+    "skipLibCheck": true,
+    /* The published bundles target es2017; specs, example, benchmark and
+       playground only ever run on a current Node, so they get modern lib. */
+    "target": "es2022",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": [
+      "es2023",
+      "dom"
+    ],
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "example/**/*.ts",
+    "benchmark/**/*.ts",
+    "playground/**/*.ts",
+    "vitest.config.ts"
+  ],
+  "exclude": [
+    "node_modules/**"
+  ]
+}

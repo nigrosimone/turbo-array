@@ -16,14 +16,21 @@
     "exponentiate",
     "Fastify",
     "globby",
+    "inlines",
     "libauth",
     "mkdir",
     "Nigro",
+    "nigrosimone",
+    "paypalme",
     "prettierignore",
     "sandboxed",
+    "snwp",
+    "stackblitz",
     "transpiled",
+    "turbo",
     "typedoc",
-    "untracked"
+    "untracked",
+    "vitest"
   ],
   "flagWords": [],
   "ignorePaths": [
