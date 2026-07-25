@@ -39,7 +39,7 @@
     "version": "commit-and-tag-version",
     "reset-hard": "git clean -dfx && git reset --hard && npm i",
     "prepare-release": "run-s reset-hard test cov:check doc:html version doc:publish",
-    "bench": "run-s build && tsx benchmark/benchmark.ts",
+    "bench": "tsx benchmark/benchmark.ts",
     "example": "tsx example/index.ts",
     "dev": "tsx watch --inspect=9222 playground/index.ts"
   },

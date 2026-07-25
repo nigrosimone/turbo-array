@@ -1,4 +1,4 @@
-import { turbo } from '../';
+import { turbo } from '../src';
 
 debugger;
 

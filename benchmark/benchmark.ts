@@ -1,6 +1,6 @@
 import { Suite } from 'benchmark';
 
-import { turbo } from '../';
+import { turbo } from '../src';
 
 const data = Array.from({ length: 30 }, (_, i) => i + 1);
 
