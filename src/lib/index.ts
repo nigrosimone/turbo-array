@@ -1,117 +1,50 @@
-type Operation<T = any, U = any> =
-  | {
-      type: 'filter';
-      fn: (value: T, index: number) => unknown;
-    }
-  | {
-      type: 'find';
-      fn: (value: T, index: number, obj: T[]) => unknown;
-    }
-  | {
-      type: 'findIndex';
-      fn: (value: T, index: number, obj: T[]) => unknown;
-    }
-  | {
-      type: 'some';
-      fn: (value: T, index: number) => boolean;
-    }
-  | {
-      type: 'every';
-      fn: (value: T, index: number) => boolean;
-    }
-  | {
-      type: 'map';
-      fn: (value: T, index: number) => U;
-    }
-  | {
-      type: 'reduce';
-      fn: (previousValue: U, currentValue: T, currentIndex: number) => U;
-      initialValue: U;
-    }
-  | {
-      type: 'forEach';
-      fn: (value: T, index: number) => void;
-    }
-  | {
-      type: 'join';
-      separator: string;
-    };
+import { createRuntimePipeline } from './runtime';
+import { seedStrategy } from './seed';
+import { INVALID_PARAMETERS, type LastOperation, needsIndexAfter, type Operation, type ToArray } from './types';
 
-/**
- * A built pipeline. `S` is the element type it consumes — the type the pipeline
- * started from, not the type the last operation produced — and `R` is what it
- * gives back.
- */
-type Pipeline<S = any, R = S[], C extends Record<string, any> = Record<string, any>> = (array: S[], context?: C) => R;
-
-type LastOperation<S = any, R = S, C extends Record<string, any> = Record<string, any>> = { build: () => Pipeline<S, R, C> };
-
-type ToArray<S = any, R = S, C extends Record<string, any> = Record<string, any>> = Pipeline<S, R[], C>;
+export type { Operation, Pipeline, ToArray } from './types';
 
 const cache = new Map<string, Turbo<any, any>>();
 
 /** Matches the `toString()` output of native and bound functions, which cannot be inlined. */
 const NATIVE_CODE = /\{\s*\[native code\]\s*\}/;
 
-const isObjectLike = (value: unknown): boolean => (typeof value === 'object' && value !== null) || typeof value === 'function';
-
-const isEmptyPlainObject = (value: unknown): boolean =>
-  typeof value === 'object' &&
-  value !== null &&
-  !Array.isArray(value) &&
-  Object.getPrototypeOf(value) === Object.prototype &&
-  Object.keys(value).length === 0 &&
-  Object.getOwnPropertySymbols(value).length === 0;
+/** Pulls the identifier out of "foo is not defined". */
+const UNDEFINED_NAME = /^(.+?) is not defined$/;
 
 /**
- * Whether `structuredClone` can copy the value without losing its prototype.
- * Class instances survive the clone but come back as plain objects, so they are
- * rejected here and shared by reference instead of being silently degraded.
+ * Turn the `ReferenceError` a lost closure produces into an explanation. Any
+ * other error is passed through untouched.
  */
-const isCloneable = (value: unknown): boolean => {
-  try {
-    return Object.getPrototypeOf(structuredClone(value)) === Object.getPrototypeOf(value);
-  } catch {
-    return false;
+const explain = (error: unknown): unknown => {
+  if (!(error instanceof ReferenceError)) {
+    return error;
   }
+  const name = UNDEFINED_NAME.exec(error.message)?.[1];
+  if (!name) {
+    return error;
+  }
+  return new TypeError(
+    `turbo-array: a callback reads "${name}" from the scope it was written in, which the compiled pipeline cannot see. Pass it through the context argument, or build with turbo({ compile: false }).`,
+    { cause: error },
+  );
 };
 
-/**
- * Source expression for the `reduce` seed.
- *
- * Primitives are inlined as literals, which keeps the generated function free of
- * any closure. Everything else is captured by the factory (`captured: true`) and
- * re-created on each invocation whenever it can be copied without losing its
- * prototype, so that the built function stays reusable.
- */
-const seedExpression = (value: unknown): { readonly code: string; readonly captured: boolean } => {
-  if (value === null) {
-    return { code: 'null', captured: false };
-  }
-  if (value === undefined) {
-    return { code: 'undefined', captured: false };
-  }
-  if (typeof value === 'boolean') {
-    return { code: String(value), captured: false };
-  }
-  if (typeof value === 'number') {
-    // `NaN`, `Infinity` and `-Infinity` all stringify to valid expressions.
-    return { code: Object.is(value, -0) ? '-0' : String(value), captured: false };
-  }
-  if (typeof value === 'string') {
-    return { code: JSON.stringify(value), captured: false };
-  }
-  if (Array.isArray(value) && value.length === 0) {
-    return { code: '[]', captured: false };
-  }
-  if (isEmptyPlainObject(value)) {
-    return { code: '{}', captured: false };
-  }
-  if (isObjectLike(value) && isCloneable(value)) {
-    return { code: '__turboClone(__turboSeed)', captured: true };
-  }
-  // BigInt, symbols, class instances and anything holding a function.
-  return { code: '__turboSeed', captured: true };
+export type TurboOptions = {
+  /** A key to store the instance in the cache, as `turbo(cacheKey)` does. */
+  readonly cacheKey?: string;
+  /**
+   * How the pipeline is executed.
+   *
+   * - `undefined` (default): compile it with `new Function`, which is the
+   *   fastest, and fall back to the runtime path if code generation is not
+   *   available — under a Content Security Policy that forbids `unsafe-eval`,
+   *   for instance.
+   * - `true`: require the compiled path and throw when it is unavailable.
+   * - `false`: never generate code. Callbacks may then close over their
+   *   surrounding scope, at the cost of speed.
+   */
+  readonly compile?: boolean;
 };
 
 /**
@@ -125,9 +58,14 @@ class Turbo<T = any, C extends Record<string, any> = Record<string, any>, S = T>
   private _hasReduce = false;
   private _hasFilter = false;
   private _fn: ToArray<S, T, C> | undefined;
+  private readonly _compile: boolean | undefined;
   private readonly _lastOperation = {
     build: this.build.bind(this),
   };
+
+  constructor(compile?: boolean) {
+    this._compile = compile;
+  }
 
   /**
    * Adds a filter operation to the list of operations to be performed on the array.
@@ -291,7 +229,25 @@ class Turbo<T = any, C extends Record<string, any> = Record<string, any>, S = T>
       return this._fn;
     }
 
-    let method = '"use strict"; if (!Array.isArray(array)) throw new Error("Invalid parameters");\n';
+    const compiled = this._compile === false ? undefined : this._generate();
+    if (!compiled && this._compile === true) {
+      throw new TypeError(
+        `turbo-array: the pipeline could not be compiled, and { compile: true } forbids the runtime fallback. Drop the option to fall back automatically, or set { compile: false }.`,
+      );
+    }
+
+    this._fn = compiled ?? createRuntimePipeline<S, T, C>(this._operations, this._hasReduce, this._hasFilter);
+    this._operations.length = 0;
+    return this._fn;
+  }
+
+  /**
+   * Generate the pipeline with `new Function`, or `undefined` when code
+   * generation is unavailable — under a Content Security Policy that forbids
+   * `unsafe-eval`, for instance.
+   */
+  private _generate(): ToArray<S, T, C> | undefined {
+    let method = `"use strict"; if (!Array.isArray(array)) throw new Error(${JSON.stringify(INVALID_PARAMETERS)});\n`;
     let head = '';
     let body = '';
     let foot = '';
@@ -334,11 +290,13 @@ class Turbo<T = any, C extends Record<string, any> = Record<string, any>, S = T>
         }
 
         if (operation.type === 'reduce') {
-          const { code, captured } = seedExpression(operation.initialValue);
-          if (captured) {
+          const strategy = seedStrategy(operation.initialValue);
+          if (strategy.kind === 'literal') {
+            finalResult = `let result = ${strategy.code};\n`;
+          } else {
             seed = operation.initialValue;
+            finalResult = strategy.kind === 'clone' ? 'let result = __turboClone(__turboSeed);\n' : 'let result = __turboSeed;\n';
           }
-          finalResult = `let result = ${code};\n`;
         } else if (operation.type === 'join') {
           finalResult = 'let result = "", joined = false;\n';
           head += `const separator = ${JSON.stringify(operation.separator)};\n`;
@@ -354,7 +312,7 @@ class Turbo<T = any, C extends Record<string, any> = Record<string, any>, S = T>
 
         if (operation.type === 'filter') {
           body += `    if (!${operation.type}_${k}(item, ${indexName})) continue;\n`;
-          if (this._needsIndexAfter(k)) {
+          if (needsIndexAfter(this._operations, k)) {
             stage++;
             head += `let stage_${stage} = 0;\n`;
             body += `    const idx_${stage} = stage_${stage}++;\n`;
@@ -402,39 +360,49 @@ class Turbo<T = any, C extends Record<string, any> = Record<string, any>, S = T>
     try {
       factory = new Function('__turboSeed', '__turboClone', `return function (array, context) {\n${code}\n};`) as typeof factory;
     } catch (error) {
-      // The operations are inlined as source code, so anything whose
-      // `toString()` is not a standalone function expression (method shorthand,
-      // minifier artifacts, ...) cannot be compiled.
-      throw new TypeError(`turbo-array: the pipeline could not be compiled (${(error as Error).message}). Pass plain function expressions or arrow functions.`, { cause: error });
-    }
-
-    this._fn = factory(seed, structuredClone);
-    this._operations.length = 0;
-    return this._fn;
-  }
-
-  /**
-   * Whether any operation after `position` consumes an element index. `join` is
-   * the only operation that does not, so a filter followed exclusively by joins
-   * does not need to open a new index stage.
-   */
-  private _needsIndexAfter(position: number): boolean {
-    for (let k = position + 1, n = this._operations.length; k < n; k++) {
-      if (this._operations[k].type !== 'join') {
-        return true;
+      if (error instanceof SyntaxError) {
+        // The operations are inlined as source code, so anything whose
+        // `toString()` is not a standalone function expression (method
+        // shorthand, minifier artifacts, ...) can never be compiled. That is a
+        // mistake to report, not something to silently work around.
+        throw new TypeError(`turbo-array: the pipeline could not be compiled (${error.message}). Pass plain function expressions or arrow functions.`, { cause: error });
       }
+      // `new Function` itself is unavailable, typically a Content Security
+      // Policy without `unsafe-eval`. The runtime path covers it.
+      return undefined;
     }
-    return false;
+
+    const generated = factory(seed, structuredClone);
+
+    // The callbacks were inlined as source, so they no longer see the scope they
+    // were written in. Guarding the call costs nothing measurable and turns an
+    // opaque "x is not defined" into something actionable.
+    const guarded = ((array: S[], context?: C) => {
+      try {
+        return generated(array, context);
+      } catch (error) {
+        throw explain(error);
+      }
+    }) as ToArray<S, T, C>;
+
+    // Reading the generated source off the built function is the documented way
+    // to see what a pipeline compiled to, so keep showing that rather than this
+    // wrapper.
+    Object.defineProperty(guarded, 'toString', { value: () => generated.toString(), configurable: true, writable: true });
+    return guarded;
   }
 }
 
 /**
  * Creates and returns a new instance of the Turbo class.
- * @param cacheKey - A key to store the instance in the cache.
+ *
+ * @param options - A cache key, or an options object. See {@link TurboOptions}.
  *
  * @returns {Turbo<T, C>} A new instance of the Turbo class.
  */
-export function turbo<T = any, C extends Record<string, any> = Record<string, any>>(cacheKey?: string): Turbo<T, C> {
+export function turbo<T = any, C extends Record<string, any> = Record<string, any>>(options?: string | TurboOptions): Turbo<T, C> {
+  const { cacheKey, compile } = typeof options === 'string' ? { cacheKey: options, compile: undefined } : (options ?? {});
+
   let result: Turbo<T, C> | undefined;
   if (cacheKey) {
     result = cache.get(cacheKey);
@@ -442,7 +410,7 @@ export function turbo<T = any, C extends Record<string, any> = Record<string, an
       return result;
     }
   }
-  result = new Turbo<T, C>();
+  result = new Turbo<T, C>(compile);
   if (cacheKey) {
     cache.set(cacheKey, result);
   }

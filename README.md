@@ -1,10 +1,69 @@
 # Turbo Array
 
-Turbo Array is a lightweight, high-performance, fast library that allows you to build lazy evaluation pipelines for arrays. It supports operations like `filter`, `map`, `reduce`, `forEach`, `find`, `some`, `every` and `join`, executing them efficiently.
+Turbo Array is a lightweight, high-performance library for building array pipelines that run as one fused loop. It supports `filter`, `map`, `reduce`, `forEach`, `find`, `findIndex`, `some`, `every` and `join`, and every operation mirrors the semantics of its `Array.prototype` counterpart — including the index each callback receives — so a pipeline always agrees with the equivalent vanilla chain.
 
-A method build with Turbo Array is 4x faster than vanilla version.
+A pipeline built with Turbo Array runs the whole chain in a single loop, with no
+intermediate arrays. On 100k elements, `filter -> map -> reduce`:
 
-See the runnable example with benchmark in [example/](./example): `npm install && npm run example`.
+|                                       | ms     | vs vanilla |
+| ------------------------------------- | ------ | ---------- |
+| `array.filter(f).map(m).reduce(r, 0)` | 645    | 1.00x      |
+| **Turbo Array (default)**             | **64** | **10.15x** |
+| Turbo Array, `{ compile: false }`     | 240    | 2.69x      |
+
+The gain grows with the length of the chain — a six operation pipeline reaches
+about 20x — and shrinks to roughly nothing for a single operation, where a
+native call is already one pass. Reproduce it all with
+`npm install && npm run example`, or see [example/](./example).
+
+## Read this before you adopt it
+
+By default the callbacks are **compiled into the generated loop as source code**,
+which is where the speed comes from. Two consequences decide whether the default
+path fits your codebase:
+
+1. **A callback cannot read the scope it was written in.**
+
+   ```ts
+   const threshold = 2;
+   turbo()
+     .filter((n) => n > threshold)
+     .build()(data);
+   // TypeError: turbo-array: a callback reads "threshold" from the scope it was
+   // written in, which the compiled pipeline cannot see. Pass it through the
+   // context argument, or build with turbo({ compile: false }).
+   ```
+
+   Pass what the callback needs through [`context`](#the-context-argument), or
+   opt out of compilation.
+
+2. **It needs `new Function`.** Under a Content Security Policy without
+   `unsafe-eval` — browser extensions, some single page apps, some edge runtimes
+   — code generation is unavailable. Turbo Array detects that and falls back on
+   its own, so it keeps working, at the slower speed shown above.
+
+`turbo({ compile: false })` opts out of code generation entirely: callbacks may
+close over anything, nothing evaluates source at runtime, and the pipeline is
+still a single pass with no intermediate arrays. It lands between **1.2x and 3x**
+a vanilla chain rather than 10x, and where it falls in that range depends on how
+many distinct interpreted pipelines share the process: they run through one shared
+loop, so its call sites stop being monomorphic as they multiply. Compiling gives
+every pipeline its own machine code, which is the whole reason the default path
+exists.
+
+Behavior is otherwise identical. The test suite runs every scenario through both
+paths and asserts they agree with each other and with the equivalent native
+chain.
+
+|                                      | compiled (default)          | `{ compile: false }` |
+| ------------------------------------ | --------------------------- | -------------------- |
+| Speed, 3 operation chain             | ~10x vanilla                | 1.2x - 3x vanilla    |
+| Callbacks may close over their scope | no                          | **yes**              |
+| Works without `unsafe-eval`          | no                          | **yes**              |
+| Debuggable stack traces              | inside a generated function | normal               |
+
+Use `turbo({ compile: true })` to require compilation and get an error instead of
+the silent fallback.
 
 ## How it works
 
@@ -64,7 +123,7 @@ complexSum([1, 2, 3, 4, 5], { multiply: 2 });
 complexSum([1, 2, 3, 4, 5], { multiply: 3 });
 ```
 
-For the same reason the callbacks must be plain function expressions or arrow functions: native functions (`Math.round`), bound functions and shorthand methods cannot be inlined, and `build()` rejects them with an explicit error.
+For the same reason the callbacks must be plain function expressions or arrow functions: native functions (`Math.round`), bound functions and shorthand methods cannot be inlined, and `build()` rejects them with an explicit error. None of this applies to `turbo({ compile: false })`, where the callbacks are called as they are.
 
 ### Operations
 
@@ -84,6 +143,16 @@ A terminal operation only exposes `build()`; anything chained after it is ignore
 
 The `reduce` seed is captured once, when the pipeline is built. Primitives, plain objects, arrays and any other structured-cloneable value (`Map`, `Set`, `Date`, ...) are re-created on every invocation, so the built function stays reusable. Values that cannot be copied without losing their prototype — class instances, or objects holding functions — are shared across invocations instead, so do not mutate them in the reducer.
 
+### Choosing the execution path
+
+```ts
+turbo(); // compile, fall back to the runtime path if unavailable
+turbo({ compile: true }); // compile or throw
+turbo({ compile: false }); // never generate code
+turbo('cache-key'); // as before
+turbo({ cacheKey: 'cache-key', compile: false }); // both
+```
+
 ### Caching a pipeline
 
 `turbo(cacheKey)` returns the instance already stored under that key, so a module can build its pipeline lazily without generating the code twice:
@@ -91,7 +160,9 @@ The `reduce` seed is captured once, when the pipeline is built. Primitives, plai
 ```typescript
 import { clearCache, turbo } from 'turbo-array';
 
-const sum = turbo<number>('sum').reduce((acc, n) => acc + n, 0).build();
+const sum = turbo<number>('sum')
+  .reduce((acc, n) => acc + n, 0)
+  .build();
 
 // Later, anywhere: same instance, same built function, no code generation.
 turbo<number>('sum').build() === sum;
