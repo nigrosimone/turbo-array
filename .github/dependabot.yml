@@ -5,6 +5,13 @@ updates:
     schedule:
       interval: monthly
     open-pull-requests-limit: 5
+    ignore:
+      # TypeScript 7 crashes type aware linting (ts-api-utils: "Cannot read
+      # properties of undefined (reading 'Intrinsic')") and typescript-eslint
+      # still declares `typescript >=4.8.4 <6.1.0`. It also removes
+      # `moduleResolution=node10`. Revisit when typescript-eslint supports it.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
     groups:
       dev-dependencies:
         dependency-type: development
