@@ -2,7 +2,7 @@ import comments from '@eslint-community/eslint-plugin-eslint-comments/configs';
 import js from '@eslint/js';
 import prettier from 'eslint-config-prettier/flat';
 import functional from 'eslint-plugin-functional';
-import importPlugin from 'eslint-plugin-import';
+import importX from 'eslint-plugin-import-x';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
@@ -12,7 +12,8 @@ export default tseslint.config(
   prettier,
   {
     files: ['**/*.ts'],
-    extends: [tseslint.configs.recommended, importPlugin.flatConfigs.typescript, functional.configs.lite],
+    extends: [tseslint.configs.recommended, functional.configs.lite],
+    plugins: { 'import-x': importX },
     languageOptions: {
       parserOptions: {
         // The "everything" project: sources, specs, example, benchmark and playground.
@@ -39,7 +40,7 @@ export default tseslint.config(
       'functional/no-expression-statements': 'off',
       'functional/no-conditional-statements': 'off',
       'no-new-func': 'off',
-      'import/order': [
+      'import-x/order': [
         'error',
         {
           'newlines-between': 'always',

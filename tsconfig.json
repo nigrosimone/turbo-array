@@ -4,7 +4,7 @@
     "target": "es2017",
     "outDir": "build/main",
     "rootDir": "src",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "module": "commonjs",
     "declaration": true,
     "inlineSourceMap": true,
@@ -33,6 +33,7 @@
     // "emitDecoratorMetadata": true /* Enables experimental support for emitting type metadata for decorators. */,
     "lib": [
       "es2017",
+      "es2022.error",
       "dom"
     ],
     "types": [
