@@ -115,24 +115,50 @@ console.log(`    after clearCache:      ${turbo<number>('running-total') !== fir
 console.log('\n--- generated code -------------------------------------------\n');
 console.log(complexSum.toString());
 
+console.log('\n--- closures, and the codegen free path -----------------------');
+
+// The default path compiles the callbacks into the generated loop, so they can
+// no longer see the scope they were written in.
+const threshold = 10;
+try {
+  turbo<number>()
+    .filter((value) => value > threshold)
+    .build()(data);
+} catch (error) {
+  console.log(`    default path:  ${(error as Error).message.split('.')[0]}.`);
+}
+
+// `{ compile: false }` skips code generation: closures work, nothing evaluates
+// source at run time, and the pipeline is still one pass with no intermediates.
+const closureSafe = turbo<number>({ compile: false })
+  .filter((value) => value > threshold)
+  .map((value) => value * 2)
+  .build();
+report(
+  '{ compile: false } with a closure',
+  closureSafe(data),
+  data.filter((value) => value > threshold).map((value) => value * 2),
+);
+
 console.log('\n--- rough timing ---------------------------------------------');
 console.log('    (see `npm run bench` for the real benchmark)\n');
 
 const big = Array.from({ length: 100_000 }, (_, i) => i + 1);
 const rounds = 200;
 
-let started = performance.now();
-for (let i = 0; i < rounds; i++) {
-  complexSum(big);
-}
-const turboMs = performance.now() - started;
+const runtimeSum = turbo<number>({ compile: false }).filter(isEven).map(double).reduce(sum, 0).build();
 
-started = performance.now();
-for (let i = 0; i < rounds; i++) {
-  big.filter(isEven).map(double).reduce(sum, 0);
-}
-const vanillaMs = performance.now() - started;
+const time = (fn: () => unknown) => {
+  for (let i = 0; i < 20; i++) fn();
+  const started = performance.now();
+  for (let i = 0; i < rounds; i++) fn();
+  return performance.now() - started;
+};
 
-console.log(`    turbo   ${turboMs.toFixed(0)} ms`);
-console.log(`    vanilla ${vanillaMs.toFixed(0)} ms`);
-console.log(`    speedup ${(vanillaMs / turboMs).toFixed(2)}x\n`);
+const vanillaMs = time(() => big.filter(isEven).map(double).reduce(sum, 0));
+const turboMs = time(() => complexSum(big));
+const runtimeMs = time(() => runtimeSum(big));
+
+console.log(`    vanilla                    ${vanillaMs.toFixed(0).padStart(5)} ms   1.00x`);
+console.log(`    turbo (compiled)           ${turboMs.toFixed(0).padStart(5)} ms  ${(vanillaMs / turboMs).toFixed(2).padStart(5)}x`);
+console.log(`    turbo { compile: false }   ${runtimeMs.toFixed(0).padStart(5)} ms  ${(vanillaMs / runtimeMs).toFixed(2).padStart(5)}x\n`);
