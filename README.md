@@ -13,8 +13,9 @@ intermediate arrays. On 100k elements, `filter -> map -> reduce`:
 
 The gain grows with the length of the chain — a six operation pipeline reaches
 about 20x — and shrinks to roughly nothing for a single operation, where a
-native call is already one pass. Reproduce it all with
-`npm install && npm run example`, or see [example/](./example).
+native call is already one pass. Reproduce it all on
+[StackBlitz](https://stackblitz.com/github/nigrosimone/turbo-array), or locally
+with `npm install && npm run example` — sources in [example/](./example).
 
 ## Read this before you adopt it
 
