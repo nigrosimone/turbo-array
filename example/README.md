@@ -9,6 +9,10 @@ npm install
 npm run example
 ```
 
+Or run it without cloning anything, on
+[StackBlitz](https://stackblitz.com/github/nigrosimone/turbo-array):
+`.stackblitzrc` in the repository root points it at this example.
+
 The example imports the library straight from `../src`, so any change you make
 to the source is picked up on the next run — no build step needed.
 
