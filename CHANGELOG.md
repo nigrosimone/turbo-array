@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.3.0](https://github.com/nigrosimone/turbo-array/compare/v1.2.4...v1.3.0) (2026-07-26)
+
+### Features
+
+* explain lost closures, and add a codegen free execution path ([42fef19](https://github.com/nigrosimone/turbo-array/commit/42fef19d9b4165664544154e5a6013e420ab04ef))
+
+### Bug Fixes
+
+* **ci:** typecheck benchmark and playground against the sources ([296a7f7](https://github.com/nigrosimone/turbo-array/commit/296a7f7b1082ded613574963f4cd80c37baaba4b))
+* correct callback indexes, join and reduce seeds; add CI and vitest ([35085f1](https://github.com/nigrosimone/turbo-array/commit/35085f1f562e2dbb3721f535760a5dcb52f0d12a))
+
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
 ### [1.2.4](https://github.com/nigrosimone/turbo-array/compare/v1.2.2...v1.2.4) (2025-08-17)
