@@ -38,6 +38,10 @@ permissions:
   # token for a publish credential, so no NPM_TOKEN secret is needed.
   id-token: write
 
+env:
+  # the release commits on the runner: git hooks have no business running there
+  HUSKY: 0
+
 jobs:
   publish:
     name: Publish to npm

@@ -42,7 +42,8 @@
     "example": "tsx example/index.ts",
     "example:watch": "tsx watch example/index.ts",
     "dev": "tsx watch --inspect=9222 playground/index.ts",
-    "release": "release-it"
+    "release": "release-it",
+    "prepare": "husky"
   },
   "engines": {
     "node": ">=20"
@@ -61,6 +62,8 @@
     "eslint-plugin-functional": "^10.0.0",
     "eslint-plugin-import-x": "^4.17.1",
     "gh-pages": "^6.3.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
     "npm-run-all2": "^9.0.2",
     "open-cli": "^9.0.0",
     "prettier": "^3.9.6",
@@ -83,5 +86,8 @@
   "prettier": {
     "singleQuote": true,
     "printWidth": 180
+  },
+  "lint-staged": {
+    "*": "prettier --write --ignore-unknown"
   }
 }

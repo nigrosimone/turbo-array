@@ -1,0 +1,5 @@
+# mirrors the CI "static" job
+npm run test:prettier
+npm run test:lint
+npm run test:spelling
+npm run test:types
