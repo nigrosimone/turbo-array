@@ -31,21 +31,29 @@ jobs:
           cache: npm
           registry-url: https://registry.npmjs.org
 
+      # Runs before anything expensive: a manual dispatch carries no tag, so without
+      # this the run builds and tests everything only to die on the last step, when
+      # npm refuses to overwrite a published version.
+      - name: Check the version is releasable
+        run: |
+          name="$(node -p 'require("./package.json").name')"
+          version="$(node -p 'require("./package.json").version')"
+          # a tag push names the release, so the tag and the manifest have to agree
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "${GITHUB_REF_NAME#v}" != "$version" ]; then
+            echo "::error::tag ${GITHUB_REF_NAME} does not match package.json version ${version}"
+            exit 1
+          fi
+          if npm view "$name@$version" version >/dev/null 2>&1; then
+            echo "::error::$name@$version is already on npm: cut a new version with \`npm run release\`"
+            exit 1
+          fi
+          echo "Releasing $name v$version"
+
       # Trusted publishing needs npm 11.5.1 or newer.
       - name: Use an npm that can publish with OIDC
         run: npm install -g npm@latest
 
       - run: npm ci
-
-      - name: Check the tag matches the package version
-        if: github.ref_type == 'tag'
-        run: |
-          tag="${GITHUB_REF_NAME#v}"
-          version="$(node -p 'require("./package.json").version')"
-          if [ "$tag" != "$version" ]; then
-            echo "::error::tag ${GITHUB_REF_NAME} does not match package.json version ${version}"
-            exit 1
-          fi
 
       # Builds, lints, type checks and runs the suite. The build output is what
       # gets published, so this has to succeed before publishing.
